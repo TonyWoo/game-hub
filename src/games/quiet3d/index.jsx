@@ -150,6 +150,8 @@ function PlayScreen({ theme, save, commit, onBack }) {
     scene.add(world);
     const particles = makeParticles(W.particle);
     if (particles) scene.add(particles);
+    // 家具可放置台面：[{y, x0, x1, z0, z1}]，来自 worlds.js
+    const placeSurfaces = world.userData.surfaces || [];
 
     // 小朋友：只通过物品栏「小朋友」分组手动放置，场景不再预置固定 NPC
     // kids 参与统一待机/挥手动效；kidPickables 用于射线点选
@@ -171,10 +173,10 @@ function PlayScreen({ theme, save, commit, onBack }) {
     const ray = new THREE.Raycaster();
     const ptr = new THREE.Vector2();
 
-    const spawnAt = (id, x, z, animate = true) => {
+    const spawnAt = (id, x, z, y = 0, animate = true) => {
       const g = buildModel(id);
       if (!g) return null;
-      g.position.set(x, 0, z);
+      g.position.set(x, y, z);
       g.userData.wordId = id;
       scene.add(g);
       pickables.push(g);
@@ -184,15 +186,16 @@ function PlayScreen({ theme, save, commit, onBack }) {
     // 用户手动放置的小朋友（与固定 NPC 共用 kids 动画数组与 kidPickables 点选）
     const placedKids = [];
     const isKidId = (id) => typeof id === 'string' && id.startsWith('kid-');
-    const spawnKidAt = (presetId, x, z, animate = true) => {
+    const spawnKidAt = (presetId, x, z, y = 0, animate = true) => {
       const preset = kidPresetOf(presetId);
       if (!preset) return null;
       let g;
       try { g = buildKid(preset); } catch (e) { console.warn('[quiet3d] 小朋友构造失败:', e); return null; }
-      g.position.set(x, 0, z);
+      g.position.set(x, y, z);
       const face = Math.atan2(CAM_HOME.pos[0] - x, CAM_HOME.pos[2] - z);
       g.rotation.y = face;
       g.userData.baseRotY = face;
+      g.userData.baseY = y;
       g.userData.kidPreset = presetId;
       scene.add(g);
       kids.push(g);
@@ -203,8 +206,8 @@ function PlayScreen({ theme, save, commit, onBack }) {
     };
     const initPlaced = save.placed[theme.id] || [];
     initPlaced.forEach((p) => {
-      if (isKidId(p.id)) spawnKidAt(p.id, p.x, p.z, false);
-      else spawnAt(p.id, p.x, p.z, false);
+      if (isKidId(p.id)) spawnKidAt(p.id, p.x, p.z, p.y || 0, false);
+      else spawnAt(p.id, p.x, p.z, p.y || 0, false);
     });
 
     const setPtr = (e) => {
@@ -212,9 +215,22 @@ function PlayScreen({ theme, save, commit, onBack }) {
       ptr.x = ((e.clientX - r.left) / r.width) * 2 - 1;
       ptr.y = -((e.clientY - r.top) / r.height) * 2 + 1;
     };
+    // 取场景点：先试家具台面（取离相机最近的命中），再回落到地面 y=0
+    const _surfPlane = new THREE.Plane();
+    const _up = new THREE.Vector3(0, 1, 0);
     const groundPoint = (e) => {
       setPtr(e); ray.setFromCamera(ptr, camera);
       const v = new THREE.Vector3();
+      let best = null, bestD = Infinity;
+      for (const s of placeSurfaces) {
+        _surfPlane.set(_up, -s.y);
+        if (ray.ray.intersectPlane(_surfPlane, v)
+          && v.x >= s.x0 && v.x <= s.x1 && v.z >= s.z0 && v.z <= s.z1) {
+          const d = v.distanceToSquared(camera.position);
+          if (d < bestD) { bestD = d; best = v.clone(); }
+        }
+      }
+      if (best) return best;
       return ray.ray.intersectPlane(groundPlane, v) ? v : null;
     };
     const pickModel = (e) => {
@@ -265,8 +281,8 @@ function PlayScreen({ theme, save, commit, onBack }) {
     const persistPlaced = () => {
       const r2 = (v) => Math.round(v * 100) / 100;
       const arr = [
-        ...pickables.map((g) => ({ id: g.userData.wordId, x: r2(g.position.x), z: r2(g.position.z) })),
-        ...placedKids.map((g) => ({ id: g.userData.kidPreset, x: r2(g.position.x), z: r2(g.position.z) })),
+        ...pickables.map((g) => ({ id: g.userData.wordId, x: r2(g.position.x), y: r2(g.position.y), z: r2(g.position.z) })),
+        ...placedKids.map((g) => ({ id: g.userData.kidPreset, x: r2(g.position.x), y: r2(g.position.y), z: r2(g.position.z) })),
       ];
       commit((s) => { s.placed[theme.id] = arr; });
     };
@@ -290,7 +306,7 @@ function PlayScreen({ theme, save, commit, onBack }) {
           const id = armedRef.current;
           if (isKidId(id)) {
             // 放置小朋友：读 Hello! + 随机英文夸奖
-            const g = spawnKidAt(id, p.x * cl, p.z * cl);
+            const g = spawnKidAt(id, p.x * cl, p.z * cl, p.y);
             if (g) {
               persistPlaced(); setArmed(null);
               const praise = nextPraise();
@@ -298,7 +314,7 @@ function PlayScreen({ theme, save, commit, onBack }) {
               showBubble({ kid: kidPresetOf(id), praise });
             }
           } else {
-            const g = spawnAt(id, p.x * cl, p.z * cl);
+            const g = spawnAt(id, p.x * cl, p.z * cl, p.y);
             if (g) {
               persistPlaced(); setArmed(null);
               // 放置成功：读英文 + 随机英文夸奖
@@ -335,6 +351,8 @@ function PlayScreen({ theme, save, commit, onBack }) {
           const cl = r > GROUND_R ? GROUND_R / r : 1;
           drag.g.position.x = p.x * cl;
           drag.g.position.z = p.z * cl;
+          drag.g.position.y = p.y;
+          if (drag.isKid) drag.g.userData.baseY = p.y;
         }
       }
     };
@@ -432,6 +450,7 @@ function PlayScreen({ theme, save, commit, onBack }) {
       const t = clockT.elapsedTime;
       controls.update();
       if (particles) particles.userData.update(dt, t);
+      if (world.userData.tick) world.userData.tick(dt, t); // 场景小动画：风车/卫星
       // 入场弹跳
       for (let i = anims.length - 1; i >= 0; i--) {
         const a = anims[i];
@@ -442,19 +461,20 @@ function PlayScreen({ theme, save, commit, onBack }) {
           a.g.scale.setScalar(Math.max(0.01, a.t * s));
         }
       }
-      // 小朋友：待机摇摆 / 挥手+弹跳
+      // 小朋友：待机摇摆 / 挥手+弹跳（baseY 为放置高度，台面上也正常）
       for (const k of kids) {
         const u = k.userData;
+        const baseY = u.baseY || 0;
         if (u.wave > 0) {
           u.wave -= dt;
           u.armR.rotation.z = 2.5 + Math.sin(t * 16) * 0.45; // 举手挥动
           u.armL.rotation.z = -0.12;
-          k.position.y = Math.abs(Math.sin(t * 10)) * 0.28;  // 开心弹跳
+          k.position.y = baseY + Math.abs(Math.sin(t * 10)) * 0.28;  // 开心弹跳
           k.rotation.z = 0;
-          if (u.wave <= 0) { u.armR.rotation.z = 0.12; k.position.y = 0; }
+          if (u.wave <= 0) { u.armR.rotation.z = 0.12; k.position.y = baseY; }
         } else {
           k.rotation.z = Math.sin(t * 2 + u.phase) * 0.05;   // 待机摇摆
-          k.position.y = Math.abs(Math.sin(t * 2.2 + u.phase)) * 0.04;
+          k.position.y = baseY + Math.abs(Math.sin(t * 2.2 + u.phase)) * 0.04;
         }
       }
       // 选中脉冲
