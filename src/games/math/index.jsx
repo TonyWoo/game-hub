@@ -2,8 +2,8 @@
 // index.jsx —— 数学乐园 · 二年级 v2（视觉理解版）
 // 流程：点卡快闪热身（3 张，不计星级）→ 8 道视觉题 → 结算星星
 // 每一题的 3D 演示动画本身就是题目：动画播完才出选项，可"再看一遍"
-// 第 9 关直接点 3D 模型作答；答错传递成长型思维，不惩罚
-// 存档独立 key：math-save-v1（与 v1 结构兼容）
+// 点选类题目（isTap，如认角、数轴旗子）直接点 3D 模型作答；答错传递成长型思维，不惩罚
+// 存档独立 key：math-save-v1（v2 在第 4 关插入长度数感，loadSave 做一次性下标迁移）
 // ============================================================
 import { useState, useRef, useEffect, useCallback } from 'react';
 import * as THREE from 'three';
@@ -355,7 +355,7 @@ function Quiz({ levelIdx, save, setSave, onExit, onReplay }) {
       {hint && <div className="mth-hint">💪 {hint}</div>}
       {isTap ? (
         <div className="mth-tapzone">
-          <span className="mth-tap-hint">👆 直接点一点 3D 里你觉得对的那个角</span>
+          <span className="mth-tap-hint">{curQ.tapHint || '👆 直接点一点 3D 里你觉得对的那个'}</span>
           <button className="mth-replay" onClick={replay}>🔁 再看一遍</button>
         </div>
       ) : (

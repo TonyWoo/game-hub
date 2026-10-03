@@ -50,6 +50,167 @@ function trayGridPos(i, cols = 4) {
   return V3(((i % cols) - (cols - 1) / 2) * 2.35, 0.5, Math.floor(i / cols) * 2.55 - 0.9);
 }
 
+// ---------- 3D 文字标签（永远面向相机的精灵；node 审计时返回空占位） ----------
+function textSprite(text, { size = 0.5, color = '#3a3a48' } = {}) {
+  if (typeof document === 'undefined') return grp();
+  const fs = 64, pad = 20;
+  const meas = document.createElement('canvas').getContext('2d');
+  meas.font = `bold ${fs}px "PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif`;
+  const w = Math.ceil(meas.measureText(text).width) + pad * 2;
+  const cv = document.createElement('canvas');
+  cv.width = w; cv.height = fs + pad * 2;
+  const cx = cv.getContext('2d');
+  cx.font = meas.font;
+  cx.fillStyle = color;
+  cx.textBaseline = 'middle';
+  cx.fillText(text, pad, cv.height / 2);
+  const tex = new THREE.CanvasTexture(cv);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false }));
+  sp.scale.set((size * w) / cv.height, size, 1);
+  sp.renderOrder = 10;
+  return sp;
+}
+
+// ================= 长度数感：barGrow —— 两根条形按比例生长对比 =================
+function visualBarGrow({ a, b, nameA, nameB }) {
+  const g = grp();
+  const maxV = Math.max(a, b), L = 7; // 最长 7 个单位
+  const X0 = -3.4;
+  const rows = [
+    { v: a, name: nameA, color: PAL.blue, y: 3.0 },
+    { v: b, name: nameB, color: PAL.orange, y: 1.6 },
+  ];
+  // 底座线
+  g.add(box(8.4, 0.1, 1.1, PAL.cream, 0.4, 0.95, 0, { shadow: false }));
+  const items = [];
+  for (const r of rows) {
+    const full = Math.max(0.14, (r.v / maxV) * L);
+    const bar = box(1, 0.72, 0.72, r.color, X0, r.y, 0);
+    const tag = textSprite(r.name, { size: 0.52 });
+    tag.position.set(X0 - 1.35, r.y, 0);
+    g.add(bar); g.add(tag);
+    items.push({ bar, full });
+  }
+  const dur = 3.2;
+  return {
+    group: g, dur,
+    update(p) {
+      const q = ez(seg(p, 0.05, 0.8));
+      for (const it of items) {
+        const len = Math.max(0.001, it.full * q);
+        it.bar.scale.x = len;
+        it.bar.position.x = X0 + len / 2;
+      }
+    },
+  };
+}
+
+// ================= 长度数感：numLine —— 0-100 数轴 + 4 面旗子（点选） =================
+function visualNumLine({ flags }) {
+  const g = grp();
+  const X0 = -5, X1 = 5, y = 1.7;
+  const xOf = (v) => X0 + (v / 100) * (X1 - X0);
+  g.add(box(X1 - X0 + 0.7, 0.18, 0.3, PAL.wood, 0, y, 0));
+  for (let v = 0; v <= 100; v += 10) {
+    const tall = v % 50 === 0;
+    g.add(box(0.1, tall ? 0.72 : 0.46, 0.32, PAL.dark, xOf(v), y + 0.24, 0, { shadow: false }));
+    const lab = textSprite(String(v), { size: 0.4 });
+    lab.position.set(xOf(v), y - 0.62, 0);
+    g.add(lab);
+  }
+  const pickables = [];
+  const FC = [PAL.red, PAL.blue, PAL.green, PAL.purple];
+  const LETTERS = ['A', 'B', 'C', 'D'];
+  const stands = [];
+  flags.forEach((v, i) => {
+    const st = grp();
+    st.add(cyl(0.06, 0.06, 2.3, PAL.dark, 0, 1.15, 0));
+    st.add(box(0.78, 0.56, 0.08, FC[i], 0.42, 2.0, 0)); // 三角旗用小旗代替
+    const ch = textSprite(LETTERS[i], { size: 0.42, color: '#ffffff' });
+    ch.position.set(0.42, 2.0, 0.06);
+    st.add(ch);
+    st.position.set(xOf(v), y + 0.1, 0);
+    st.scale.setScalar(0.001);
+    g.add(st);
+    stands.push(st);
+    const hit = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.85, 0.85, 3.4, 10),
+      new THREE.MeshBasicMaterial({ visible: false })
+    );
+    hit.position.set(xOf(v), y + 1.4, 0);
+    hit.userData.angleIdx = i; // 复用 handleAngleTap 的点选机制
+    hit.userData.stand = st;
+    g.add(hit);
+    pickables.push(hit);
+  });
+  const dur = 2.6;
+  return {
+    group: g, dur, pickables,
+    update(p) {
+      stands.forEach((st, i) => {
+        const q = ez(seg(p, 0.15 + i * 0.14, 0.35 + i * 0.14));
+        st.scale.setScalar(Math.max(0.001, q));
+      });
+    },
+  };
+}
+
+// 商品小模型
+function miniProduct(shape, color) {
+  const m = grp();
+  if (shape === 'pencil') {
+    m.add(box(1.1, 0.13, 0.13, color, 0, 0, 0));
+    m.add(cone(0.1, 0.28, PAL.cream, 0.68, 0, 0, { rz: -Math.PI / 2, shadow: false }));
+  } else if (shape === 'eraser') {
+    m.add(box(0.55, 0.32, 0.28, color, 0, 0, 0));
+  } else if (shape === 'box') {
+    m.add(box(0.95, 0.55, 0.62, color, 0, 0, 0));
+    m.add(box(0.99, 0.12, 0.66, PAL.cream, 0, 0.2, 0, { shadow: false }));
+  } else if (shape === 'cup') {
+    m.add(cyl(0.3, 0.23, 0.62, color, 0, 0, 0));
+  } else if (shape === 'blocks') {
+    m.add(box(0.42, 0.42, 0.42, color, -0.26, -0.05, 0));
+    m.add(box(0.42, 0.42, 0.42, color, 0.26, 0.12, 0));
+  } else if (shape === 'bag') {
+    m.add(box(0.85, 0.95, 0.38, color, 0, 0, 0));
+    m.add(tor(0.3, 0.07, PAL.brown, 0, 0.6, 0, { shadow: false }));
+  }
+  return m;
+}
+
+// ================= 长度数感：priceBar —— 价格长条 + 商品 =================
+function visualPriceBar({ items }) {
+  const g = grp();
+  const maxP = Math.max(items[0].price, items[1].price), L = 6.4;
+  const X0 = -3.2;
+  g.add(box(8.4, 0.1, 1.1, PAL.cream, 0.4, 0.95, 0, { shadow: false }));
+  const grows = [];
+  items.forEach((it, i) => {
+    const y = i === 0 ? 3.0 : 1.6;
+    const full = Math.max(0.14, (it.price / maxP) * L);
+    const bar = box(1, 0.72, 0.72, it.color, X0, y, 0);
+    const tag = textSprite(`${it.name} ¥${it.price}`, { size: 0.52 });
+    tag.position.set(X0 - 1.55, y + 0.62, 0);
+    const prod = miniProduct(it.shape, it.color);
+    prod.position.set(X0 - 1.55, y - 0.35, 0);
+    g.add(bar); g.add(tag); g.add(prod);
+    grows.push({ bar, full });
+  });
+  const dur = 3.2;
+  return {
+    group: g, dur,
+    update(p) {
+      const q = ez(seg(p, 0.05, 0.8));
+      for (const it of grows) {
+        const len = Math.max(0.001, it.full * q);
+        it.bar.scale.x = len;
+        it.bar.position.x = X0 + len / 2;
+      }
+    },
+  };
+}
+
 // ================= 第 1 关：merge —— 两堆合并 =================
 function visualMerge({ a, b }) {
   const t1 = Math.floor(a / 10), s1 = a % 10;
@@ -717,6 +878,9 @@ export function buildVisual(v) {
     case 'anglePick': return visualAngle(v);
     case 'story': return visualStory(v);
     case 'dotFlash': return visualDots(v);
+    case 'barGrow': return visualBarGrow(v);
+    case 'numLine': return visualNumLine(v);
+    case 'priceBar': return visualPriceBar(v);
     default: return { group: grp(), dur: 1, update() {} };
   }
 }

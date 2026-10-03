@@ -233,7 +233,9 @@ function genAngle() {
     if (t === 'biggest') { targetIdx = order.indexOf('obtuse'); text = '哪个角最大？点一点'; }
     else if (t === 'smallest') { targetIdx = order.indexOf('acute'); text = '哪个角最小？点一点'; }
     else { targetIdx = order.indexOf(t); text = `哪个是${NAMES[t]}？点一点`; }
-    qs.push({ text, options: [], answer: targetIdx, isTap: true, visual: { kind: 'anglePick', order, target: targetIdx } });
+    qs.push({ text, options: [], answer: targetIdx, isTap: true,
+      tapHint: '👆 直接点一点 3D 里你觉得对的那个角',
+      visual: { kind: 'anglePick', order, target: targetIdx } });
   }
   return qs;
 }
@@ -278,6 +280,67 @@ function genWord() {
   return qs;
 }
 
+// ---------- 新第 4 关：长度数感训练营（把数字/价格想成长度，对抗系统一） ----------
+// 理念：数字不再是符号，是看得见的长度；价格画成条形，直觉误判一摆就明白
+function genLenSense() {
+  const qs = [];
+  // --- 小节 1：数字变长度（2 题） ---
+  {
+    let a = ri(10, 99), b = ri(10, 99);
+    if (a === b) b = b === 99 ? 98 : b + 1;
+    const big = Math.max(a, b), small = Math.min(a, b), diff = big - small;
+    const v = { kind: 'barGrow', a, b, nameA: String(a), nameB: String(b) };
+    qs.push(mkQ('两根条形慢慢长出来——哪根长？它是几？', big,
+      [small, big + 1, big - 1, big + 10, small + 1].filter((x) => x > 0 && x <= 99 && x !== big), v));
+    qs.push(mkQ('长的那根比短的那根，长多少？', diff,
+      [diff + 1, diff - 1, diff + 10, diff + 2, diff + 5].filter((x) => x > 0 && x !== diff), v));
+  }
+  // --- 小节 2：数轴找位置（2 题，直接点旗子） ---
+  for (let k = 0; k < 2; k++) {
+    const t = ri(8, 92);
+    const set = new Set([t]);
+    let guard = 0;
+    while (set.size < 4 && guard++ < 60) {
+      const v = t + pick1([-20, -10, 10, 20]) + ri(-2, 2);
+      if (v >= 0 && v <= 100 && v !== t) set.add(v);
+    }
+    const flags = shuffle([...set]);
+    qs.push({
+      text: `${t} 应该站在数轴哪里？点一点旗子`,
+      options: [], answer: flags.indexOf(t), isTap: true,
+      tapHint: '👆 点一点旗子，帮数字找到它的位置',
+      visual: { kind: 'numLine', target: t, flags },
+    });
+  }
+  // --- 小节 3：价格想象（2 题） ---
+  const GOODS = [
+    { name: '铅笔', price: 8, shape: 'pencil', color: 0xffb066 },
+    { name: '橡皮', price: 5, shape: 'eraser', color: 0x6cb8ff },
+    { name: '文具盒', price: 24, shape: 'box', color: 0xb388eb },
+    { name: '水杯', price: 32, shape: 'cup', color: 0x4fc3c3 },
+    { name: '积木', price: 45, shape: 'blocks', color: 0xffd93d },
+    { name: '书包', price: 56, shape: 'bag', color: 0xf76b8a },
+  ];
+  for (let k = 0; k < 2; k++) {
+    const [g1, g2] = shuffle(GOODS).slice(0, 2);
+    const diff = Math.abs(g1.price - g2.price);
+    qs.push(mkQ(`${g1.name} ¥${g1.price}，${g2.name} ¥${g2.price}——哪个贵？贵多少？`, diff,
+      [diff + 1, diff - 1, diff + 5, diff + 10, Math.max(1, diff - 5)].filter((x) => x > 0 && x !== diff),
+      { kind: 'priceBar', items: [g1, g2] }));
+  }
+  // --- 小节 4：系统一陷阱（2 题） ---
+  qs.push(mkQ('小明有 99 颗糖，小红有 100 颗糖——看条形，小红比小明多几颗？', 1,
+    [2, 10, 0, 5],
+    { kind: 'barGrow', a: 99, b: 100, nameA: '小明99颗', nameB: '小红100颗' }));
+  qs.push({
+    text: '1 米长的绳子，和 99 厘米长的绳子——看条形，哪个长？',
+    options: ['1米的长', '99厘米的长', '一样长', '看不出来'],
+    answer: '1米的长', isTap: false,
+    visual: { kind: 'barGrow', a: 100, b: 99, nameA: '1米=100厘米', nameB: '99厘米' },
+  });
+  return qs;
+}
+
 // ---------- 点卡快闪（每关开场热身，3 张，不计星级） ----------
 // 经典点阵：5 梅花 / 6 双排 / 7 / 8 / 9 九宫 / 10 双排
 export function genDots() {
@@ -292,6 +355,7 @@ export const LEVELS = [
   { id: 'add', name: '水果加法乐园', icon: '🍎', desc: '看合并，学加法', gen: genAdd },
   { id: 'sub', name: '小火车减法', icon: '🚂', desc: '看拿走，学减法', gen: genSub },
   { id: 'mul', name: '乘法花园', icon: '🌸', desc: '花阵里看乘法', gen: genMul },
+  { id: 'lensense', name: '长度数感训练营', icon: '📊', desc: '把数字想成长度', gen: genLenSense },
   { id: 'div', name: '分饼干', icon: '🍪', desc: '看平均分，学除法', gen: genDiv },
   { id: 'mix', name: '混合运算挑战营', icon: '🧮', desc: '光圈里先算', gen: genMix },
   { id: 'len', name: '尺子王国', icon: '📏', desc: '彩带比长短', gen: genLen },
