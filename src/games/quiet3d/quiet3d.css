@@ -106,6 +106,9 @@
 .q3-tray-item.armed { border-color: #ff6b9d; background: #ffe4ef; transform: scale(1.06); }
 .q3-tray-item.done { opacity: .45; }
 .q3-tray-item.done .e { filter: grayscale(.6); }
+/* 小朋友分组：暖色边框以示区分 */
+.q3-tray-kid { border-color: #ffd9a8; background: #fffaf2; }
+.q3-tray-kid.armed { border-color: #ff9d2e; background: #fff1de; }
 
 /* ---------- 找一找 ---------- */
 .q3-quiz { flex: 1; display: flex; flex-direction: column; min-height: 0; }

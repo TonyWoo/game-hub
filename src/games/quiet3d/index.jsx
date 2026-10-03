@@ -11,7 +11,7 @@ import { THEMES, ALL_WORDS, TOTAL_WORDS, unlockNeed, wordOf } from '../quiet/the
 import { speak, speakSeq } from '../quiet/speech.js';
 import { loadSave, persistSave } from './storage.js';
 import { buildModel, auditModels } from './models/index.js';
-import { buildKid, KID_SPOTS } from './kids.js';
+import { buildKid, KID_PRESETS, kidPresetOf } from './kids.js';
 import { disposeGroup } from './models/helpers.js';
 import { WORLDS, makeParticles } from './worlds.js';
 import { emojiOf } from './emoji.js';
@@ -99,8 +99,9 @@ function PlayScreen({ theme, save, commit, onBack }) {
 
   const setArmed = (id) => { armedRef.current = id; setArmedState(id); };
 
-  const showBubble = useCallback((id, praise) => {
-    setBubble({ id, praise: praise || null });
+  // bubble: { id, praise } 单词；{ kid, praise } 手动放置的小朋友
+  const showBubble = useCallback((b) => {
+    setBubble(b);
     if (bubbleTimer.current) clearTimeout(bubbleTimer.current);
     bubbleTimer.current = setTimeout(() => setBubble(null), 5000);
   }, []);
@@ -150,23 +151,10 @@ function PlayScreen({ theme, save, commit, onBack }) {
     const particles = makeParticles(W.particle);
     if (particles) scene.add(particles);
 
-    // 小朋友 NPC（纯装饰）：待机摇摆，点中挥手+弹跳
+    // 小朋友：只通过物品栏「小朋友」分组手动放置，场景不再预置固定 NPC
+    // kids 参与统一待机/挥手动效；kidPickables 用于射线点选
     const kids = [];
     const kidPickables = [];
-    (KID_SPOTS[theme.id] || []).forEach((s) => {
-      try {
-        const k = buildKid(s);
-        k.position.set(s.x, 0, s.z);
-        const face = Math.atan2(CAM_HOME.pos[0] - s.x, CAM_HOME.pos[2] - s.z);
-        k.rotation.y = face;
-        k.userData.baseRotY = face;
-        scene.add(k);
-        kids.push(k);
-        kidPickables.push(k);
-      } catch (e) {
-        console.warn('[quiet3d] 小朋友构造失败:', e);
-      }
-    });
     const pickKid = (e) => {
       setPtr(e); ray.setFromCamera(ptr, camera);
       const hits = ray.intersectObjects(kidPickables, true);
@@ -193,8 +181,31 @@ function PlayScreen({ theme, save, commit, onBack }) {
       if (animate) { g.scale.setScalar(0.01); anims.push({ g, t: 0 }); }
       return g;
     };
+    // 用户手动放置的小朋友（与固定 NPC 共用 kids 动画数组与 kidPickables 点选）
+    const placedKids = [];
+    const isKidId = (id) => typeof id === 'string' && id.startsWith('kid-');
+    const spawnKidAt = (presetId, x, z, animate = true) => {
+      const preset = kidPresetOf(presetId);
+      if (!preset) return null;
+      let g;
+      try { g = buildKid(preset); } catch (e) { console.warn('[quiet3d] 小朋友构造失败:', e); return null; }
+      g.position.set(x, 0, z);
+      const face = Math.atan2(CAM_HOME.pos[0] - x, CAM_HOME.pos[2] - z);
+      g.rotation.y = face;
+      g.userData.baseRotY = face;
+      g.userData.kidPreset = presetId;
+      scene.add(g);
+      kids.push(g);
+      kidPickables.push(g);
+      placedKids.push(g);
+      if (animate) { g.scale.setScalar(0.01); anims.push({ g, t: 0 }); }
+      return g;
+    };
     const initPlaced = save.placed[theme.id] || [];
-    initPlaced.forEach((p) => spawnAt(p.id, p.x, p.z, false));
+    initPlaced.forEach((p) => {
+      if (isKidId(p.id)) spawnKidAt(p.id, p.x, p.z, false);
+      else spawnAt(p.id, p.x, p.z, false);
+    });
 
     const setPtr = (e) => {
       const r = renderer.domElement.getBoundingClientRect();
@@ -219,7 +230,8 @@ function PlayScreen({ theme, save, commit, onBack }) {
         const a = Math.random() * Math.PI * 2;
         const r = 1.2 + Math.random() * 3.0;
         const x = Math.cos(a) * r, z = Math.sin(a) * r;
-        const ok = pickables.every((g) => Math.hypot(g.position.x - x, g.position.z - z) > 1.4);
+        const ok = pickables.every((g) => Math.hypot(g.position.x - x, g.position.z - z) > 1.4)
+          && placedKids.every((g) => Math.hypot(g.position.x - x, g.position.z - z) > 1.4);
         if (ok) return { x, z };
       }
       return { x: (Math.random() - 0.5) * 6, z: (Math.random() - 0.5) * 6 };
@@ -251,16 +263,16 @@ function PlayScreen({ theme, save, commit, onBack }) {
     };
 
     const persistPlaced = () => {
-      const arr = pickables.map((g) => ({
-        id: g.userData.wordId,
-        x: Math.round(g.position.x * 100) / 100,
-        z: Math.round(g.position.z * 100) / 100,
-      }));
+      const r2 = (v) => Math.round(v * 100) / 100;
+      const arr = [
+        ...pickables.map((g) => ({ id: g.userData.wordId, x: r2(g.position.x), z: r2(g.position.z) })),
+        ...placedKids.map((g) => ({ id: g.userData.kidPreset, x: r2(g.position.x), z: r2(g.position.z) })),
+      ];
       commit((s) => { s.placed[theme.id] = arr; });
     };
 
     // ---- 手势：点选 / 放置 / 拖拽 ----
-    let drag = null; // { g, moved, sx, sy }
+    let drag = null; // { g, isKid, moved, sx, sy }
     const onDown = (e) => {
       if (e.isPrimary === false) return;
       // 找一找模式：点模型 = 作答
@@ -270,34 +282,47 @@ function PlayScreen({ theme, save, commit, onBack }) {
         if (g) answerQuiz(g.userData.wordId);
         return;
       }
-      // 点中小朋友：挥手+弹跳（纯装饰，不放置/不拖拽）
-      if (!armedRef.current) {
-        const kid = pickKid(e);
-        if (kid) { kid.userData.wave = 1.1; return; }
-      }
       if (armedRef.current) {
         const p = groundPoint(e);
         if (p) {
           const r = Math.hypot(p.x, p.z);
           const cl = r > GROUND_R ? GROUND_R / r : 1;
           const id = armedRef.current;
-          const g = spawnAt(id, p.x * cl, p.z * cl);
-          if (g) {
-            persistPlaced(); setArmed(null);
-            // 放置成功：读英文 + 随机英文夸奖
-            const w = wordOf(id);
-            const praise = nextPraise();
-            speakSeq([w.en + '!', praise]);
-            showBubble(id, praise);
-            collect(id);
+          if (isKidId(id)) {
+            // 放置小朋友：读 Hello! + 随机英文夸奖
+            const g = spawnKidAt(id, p.x * cl, p.z * cl);
+            if (g) {
+              persistPlaced(); setArmed(null);
+              const praise = nextPraise();
+              speakSeq(['Hello!', praise]);
+              showBubble({ kid: kidPresetOf(id), praise });
+            }
+          } else {
+            const g = spawnAt(id, p.x * cl, p.z * cl);
+            if (g) {
+              persistPlaced(); setArmed(null);
+              // 放置成功：读英文 + 随机英文夸奖
+              const w = wordOf(id);
+              const praise = nextPraise();
+              speakSeq([w.en + '!', praise]);
+              showBubble({ id, praise });
+              collect(id);
+            }
           }
         }
+        return;
+      }
+      // 点中小朋友：开始拖拽候选（点按=挥手+弹跳，拖动=换位置）
+      const kid = pickKid(e);
+      if (kid) {
+        controls.enabled = false;
+        drag = { g: kid, isKid: true, moved: false, sx: e.clientX, sy: e.clientY };
         return;
       }
       const g = pickModel(e);
       if (g) {
         controls.enabled = false;
-        drag = { g, moved: false, sx: e.clientX, sy: e.clientY };
+        drag = { g, isKid: false, moved: false, sx: e.clientX, sy: e.clientY };
       }
     };
     const onMove = (e) => {
@@ -315,14 +340,19 @@ function PlayScreen({ theme, save, commit, onBack }) {
     };
     const onUp = (e) => {
       if (!drag) return;
-      const g = drag.g, wasTap = !drag.moved;
+      const g = drag.g, wasTap = !drag.moved, isKid = drag.isKid;
       drag = null;
       controls.enabled = true;
+      if (isKid) {
+        if (wasTap) g.userData.wave = 1.1;  // 点按小朋友：挥手+弹跳
+        else persistPlaced();                 // 拖动换位置：存档（不夸奖）
+        return;
+      }
       if (wasTap) {
         const w = wordOf(g.userData.wordId);
         select(g);
         speak(w.en);
-        showBubble(w.id);
+        showBubble({ id: w.id });
         collect(w.id);
       } else {
         persistPlaced();
@@ -486,14 +516,21 @@ function PlayScreen({ theme, save, commit, onBack }) {
           </div>
         )}
         {quiz && quiz.fb && <div className="q3-quiz-fb">{quiz.fb}</div>}
-        {bubble && !quiz && (() => { const w = wordOf(bubble.id); return (
+        {bubble && !quiz && (() => {
+          if (bubble.kid) return (
+            <div className="q3-bubble">
+              <div className="b-en">Hello!{bubble.praise ? ` ${bubble.praise}` : ''} 👋</div>
+              <div className="b-zh">{bubble.kid.name} <button className="b-replay" onClick={() => speak('Hello!')}>🔊</button></div>
+            </div>
+          );
+          const w = wordOf(bubble.id); return (
           <div className="q3-bubble">
             <div className="b-en">{w.en}!{bubble.praise ? ` ${bubble.praise}` : ''}</div>
             <div className="b-zh">{w.zh} <button className="b-replay" onClick={() => speak(w.en)}>🔊</button></div>
           </div>
         ); })()}
         {armed && !quiz && (
-          <div className="q3-hint">点一下场景，把「{wordOf(armed).zh}」放下吧！
+          <div className="q3-hint">点一下场景，把「{armed.startsWith('kid-') ? kidPresetOf(armed).name : wordOf(armed).zh}」放下吧！
             <button onClick={() => setArmed(null)}>取消</button>
           </div>
         )}
@@ -503,6 +540,16 @@ function PlayScreen({ theme, save, commit, onBack }) {
         <button className="q3-cam" onClick={() => apiRef.current && apiRef.current.resetCamera()} title="重置视角">🎥</button>
       </div>
       <div className="q3-tray">
+        {KID_PRESETS.map((k) => (
+          <button
+            key={k.id}
+            className={`q3-tray-item q3-tray-kid${armed === k.id ? ' armed' : ''}${placedIds.has(k.id) ? ' done' : ''}`}
+            onClick={() => setArmed(armed === k.id ? null : k.id)}
+          >
+            <span className="e">{k.emoji}</span>
+            <span className="n">{k.name}</span>
+          </button>
+        ))}
         {theme.items.map((it) => (
           <button
             key={it.id}

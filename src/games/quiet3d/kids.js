@@ -4,7 +4,8 @@
 // 约定：返回 THREE.Group，原点底部中心；userData.isKid=true，
 // userData.armL/armR 为胳膊关节组（挥手用），phase 随机相位，
 // wave>0 时正在挥手（秒），baseRotY 初始朝向。
-// KID_SPOTS：各主题小朋友站位 { x, z, ...kidOpts }
+// KID_PRESETS：物品栏可手动放置的 6 个小朋友预设 { id, name, emoji, ...kidOpts }
+// （场景不再预置固定小朋友，全部走物品栏手动放置）
 // ============================================================
 import { PAL, box, sph, cyl, tor, grp } from './models/helpers.js';
 
@@ -91,55 +92,15 @@ export function buildKid(o = {}) {
   return g;
 }
 
-// ---------- 各主题站位（x, z 为地面坐标，面向初始相机） ----------
-// P 粉 B 蓝 Y 黄 G 绿 O 橙 T 青 PU 紫 R 玫瑰 M 薄荷 N 藏青 BR 棕
-export const KID_SPOTS = {
-  bedroom: [
-    { x: -2.9, z: 1.6, girl: true, hairStyle: 'ponytail', shirt: PAL.pink },
-    { x: 2.9, z: 2.0, hairStyle: 'short', shirt: PAL.blue, skin: SKINS[1] },
-    { x: 0.6, z: -2.6, girl: true, hairStyle: 'braids', shirt: PAL.purple, hairColor: HAIR_COLORS[2] },
-  ],
-  kitchen: [
-    { x: -2.6, z: 1.8, hairStyle: 'curly', shirt: PAL.orange, skin: SKINS[2] },
-    { x: 2.9, z: 0.6, girl: true, hairStyle: 'short', shirt: PAL.yellow, hairColor: HAIR_COLORS[3] },
-    { x: -0.6, z: -2.2, hairStyle: 'short', shirt: PAL.teal },
-  ],
-  supermarket: [
-    { x: -2.6, z: 0.6, girl: true, hairStyle: 'ponytail', shirt: PAL.rose, skin: SKINS[1] },
-    { x: 2.6, z: 0.9, hairStyle: 'short', shirt: PAL.green, hairColor: HAIR_COLORS[1] },
-  ],
-  garden: [
-    { x: -2.6, z: -1.0, hairStyle: 'short', shirt: PAL.green },
-    { x: 2.6, z: 0.6, girl: true, hairStyle: 'curly', shirt: PAL.yellow, skin: SKINS[3] },
-    { x: 0, z: 2.6, hairStyle: 'short', shirt: PAL.blue, hairColor: HAIR_COLORS[4] },
-  ],
-  farm: [
-    { x: -2.6, z: 1.0, girl: true, hairStyle: 'braids', shirt: PAL.orange, hairColor: HAIR_COLORS[2] },
-    { x: 2.6, z: -0.6, hairStyle: 'short', shirt: PAL.brown, skin: SKINS[2] },
-    { x: 0.6, z: 2.9, girl: true, hairStyle: 'ponytail', shirt: PAL.mint },
-  ],
-  beach: [
-    { x: -2.6, z: 1.6, hairStyle: 'short', shirt: PAL.navy, skin: SKINS[1] },
-    { x: 2.6, z: 2.1, girl: true, hairStyle: 'ponytail', shirt: PAL.pink },
-    { x: 0, z: -1.6, girl: true, hairStyle: 'short', shirt: PAL.teal, hairColor: HAIR_COLORS[3] },
-  ],
-  school: [
-    { x: -2.9, z: 1.2, hairStyle: 'short', shirt: PAL.purple },
-    { x: 2.9, z: 1.6, girl: true, hairStyle: 'braids', shirt: PAL.blue, skin: SKINS[2] },
-    { x: 0, z: -2.2, hairStyle: 'curly', shirt: PAL.gray, hairColor: HAIR_COLORS[0] },
-  ],
-  birthday: [
-    { x: -2.6, z: 0.9, girl: true, hairStyle: 'curly', shirt: PAL.rose, skin: SKINS[1] },
-    { x: 2.6, z: 0.9, hairStyle: 'short', shirt: PAL.yellow, hairColor: HAIR_COLORS[2] },
-    { x: -1.2, z: 2.4, girl: true, hairStyle: 'ponytail', shirt: PAL.purple },
-  ],
-  petshop: [
-    { x: -2.9, z: 1.0, hairStyle: 'short', shirt: PAL.teal, skin: SKINS[3] },
-    { x: 2.6, z: 1.6, girl: true, hairStyle: 'ponytail', shirt: PAL.orange },
-  ],
-  space: [
-    { x: -2.6, z: 1.6, hairStyle: 'short', shirt: PAL.navy, hairColor: HAIR_COLORS[5] },
-    { x: 2.6, z: -0.6, girl: true, hairStyle: 'braids', shirt: PAL.purple },
-    { x: 0, z: 2.9, hairStyle: 'curly', shirt: PAL.blue, skin: SKINS[2] },
-  ],
-};
+// ---------- 可手动放置的小朋友预设（物品栏用） ----------
+// id 固定为 kid-1..kid-6，与单词 id 无冲突；男女各半
+export const KID_PRESETS = [
+  { id: 'kid-1', name: '小朋友 1', emoji: '🧒', girl: false, skin: SKINS[0], hairStyle: 'short',    hairColor: HAIR_COLORS[0], shirt: PAL.blue,   bottom: PAL.navy },
+  { id: 'kid-2', name: '小朋友 2', emoji: '👧', girl: true,  skin: SKINS[1], hairStyle: 'ponytail', hairColor: HAIR_COLORS[2], shirt: PAL.pink },
+  { id: 'kid-3', name: '小朋友 3', emoji: '🧒', girl: false, skin: SKINS[2], hairStyle: 'curly',    hairColor: HAIR_COLORS[1], shirt: PAL.orange },
+  { id: 'kid-4', name: '小朋友 4', emoji: '👧', girl: true,  skin: SKINS[0], hairStyle: 'braids',   hairColor: HAIR_COLORS[3], shirt: PAL.purple },
+  { id: 'kid-5', name: '小朋友 5', emoji: '🧒', girl: false, skin: SKINS[3], hairStyle: 'short',    hairColor: HAIR_COLORS[5], shirt: PAL.teal },
+  { id: 'kid-6', name: '小朋友 6', emoji: '👧', girl: true,  skin: SKINS[1], hairStyle: 'ponytail', hairColor: HAIR_COLORS[4], shirt: PAL.yellow },
+];
+export const kidPresetOf = (id) => KID_PRESETS.find((k) => k.id === id);
+
