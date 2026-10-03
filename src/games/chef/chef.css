@@ -1,0 +1,151 @@
+/* ============================================================
+   chef.css —— 小小厨师样式（作用域 .game-chef）
+   ============================================================ */
+.game-chef {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: #fff8f0;
+  font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.cf-play { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+
+.cf-topbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(255,255,255,.94);
+  z-index: 5;
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
+}
+.cf-topbar .t-name { font-weight: 800; color: #6a4a3a; font-size: 16px; }
+.cf-topbar .t-stars { font-size: 15px; font-weight: 800; color: #e8a93d; }
+.cf-icon-btn {
+  border: none; background: #ffe9d6; border-radius: 12px; padding: 6px 12px;
+  font-size: 14px; font-weight: 700; color: #c97a2e; cursor: pointer;
+  margin-left: auto;
+}
+
+.cf-stage { position: relative; flex: 1; min-height: 0; }
+.cf-stage canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+
+/* 订单/评价气泡：跟随顾客头顶（JS 每帧定位） */
+.cf-order-bubble {
+  position: absolute; left: -200px; top: -200px; transform: translate(-50%, -100%);
+  background: #fff; border-radius: 14px; padding: 6px 14px;
+  border: 2px solid #ffd9a8; box-shadow: 0 4px 14px rgba(201,122,46,.18);
+  text-align: center; z-index: 4; pointer-events: none; white-space: nowrap;
+  transition: opacity .2s;
+}
+.cf-order-bubble .ob-want { font-size: 12px; color: #a08a70; margin-right: 4px; }
+.cf-order-bubble .ob-emoji { font-size: 22px; }
+.cf-order-bubble .ob-name { font-size: 14px; font-weight: 800; color: #6a4a3a; margin-left: 4px; }
+.cf-order-bubble .ob-stars { font-size: 18px; letter-spacing: 2px; }
+.cf-order-bubble .ob-praise { font-size: 14px; font-weight: 800; color: #d94f8a; margin-top: 2px; }
+.cf-order-bubble::after {
+  content: ''; position: absolute; left: 50%; bottom: -8px; transform: translateX(-50%);
+  border: 8px solid transparent; border-top-color: #ffd9a8; border-bottom: none;
+}
+
+/* 单词气泡 */
+.cf-bubble {
+  position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+  background: #fff; border-radius: 16px; padding: 8px 18px;
+  box-shadow: 0 4px 16px rgba(201,122,46,.18); border: 2px solid #ffd9a8;
+  text-align: center; z-index: 4; pointer-events: auto;
+  animation: cf-pop .25s ease-out;
+}
+.cf-bubble .b-en { font-size: 20px; font-weight: 800; color: #c97a2e; }
+.cf-bubble .b-zh { font-size: 14px; color: #8a7a6a; margin-top: 2px; }
+.cf-bubble .b-replay {
+  border: none; background: #ffe9d6; border-radius: 8px; margin-left: 6px;
+  font-size: 13px; cursor: pointer; padding: 2px 8px;
+}
+@keyframes cf-pop { from { transform: translateX(-50%) scale(.8); opacity: 0; } }
+
+.cf-hint {
+  position: absolute; bottom: 8px; left: 0; right: 0; text-align: center;
+  font-size: 12px; color: #bfa07e; pointer-events: none; z-index: 3;
+}
+.cf-stage-btns {
+  position: absolute; right: 10px; bottom: 26px; z-index: 4;
+  display: flex; flex-direction: column; gap: 8px; align-items: flex-end;
+}
+.cf-serve {
+  border: none; border-radius: 999px; padding: 12px 22px;
+  font-size: 17px; font-weight: 800; cursor: pointer;
+  background: #e8dcc8; color: #a08a70;
+  box-shadow: 0 4px 12px rgba(0,0,0,.10);
+  transition: transform .15s, background .2s;
+}
+.cf-serve.ready {
+  background: linear-gradient(135deg, #ffb066, #ff8a5c); color: #fff;
+  animation: cf-serve-pulse 1.2s ease-in-out infinite;
+}
+.cf-serve:disabled { cursor: default; }
+@keyframes cf-serve-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.07); }
+}
+.cf-fab {
+  width: 44px; height: 44px; border-radius: 50%; border: none;
+  background: rgba(255,255,255,.92); font-size: 20px; cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,.12);
+}
+
+/* 菜谱 tabs */
+.cf-tabs {
+  display: flex; gap: 8px; padding: 8px 12px 2px;
+  background: rgba(255,255,255,.7); z-index: 5;
+}
+.cf-tab {
+  flex: 1; border: 2px solid transparent; background: #fff7ee; border-radius: 14px;
+  padding: 6px 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.cf-tab .e { font-size: 20px; }
+.cf-tab .n { font-size: 14px; font-weight: 700; color: #8a6a4a; }
+.cf-tab.active { border-color: #ffb066; background: #fff1de; }
+
+/* 食材栏 */
+.cf-tray {
+  display: flex; gap: 10px; padding: 8px 12px 12px;
+  overflow-x: auto; background: rgba(255,255,255,.7); z-index: 5;
+  -webkit-overflow-scrolling: touch;
+}
+.cf-ing {
+  position: relative; flex: 0 0 auto; width: 76px;
+  border: 2px solid #f0e2cc; background: #fff; border-radius: 14px;
+  padding: 8px 4px 6px; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+}
+.cf-ing .e { font-size: 30px; }
+.cf-ing .en { font-size: 11px; font-weight: 700; color: #8a6a4a; }
+.cf-ing.done { border-color: #7ed491; background: #f0fbf2; opacity: .75; }
+.cf-ing.next { border-color: #ffb066; animation: cf-next-pulse 1s ease-in-out infinite; }
+@keyframes cf-next-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 rgba(255,176,102,0); }
+  50% { transform: scale(1.06); box-shadow: 0 0 12px rgba(255,176,102,.55); }
+}
+.cf-ing .step-hint { position: absolute; top: -10px; right: -6px; font-size: 16px; }
+
+/* 单词本 */
+.cf-words { flex: 1; display: flex; flex-direction: column; min-height: 0; padding-bottom: 12px; }
+.cf-word-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+  padding: 0 12px; overflow-y: auto;
+}
+.cf-word {
+  border: 2px solid #f0e2cc; background: #fff; border-radius: 14px;
+  padding: 10px 4px; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+}
+.cf-word.got { border-color: #ffb066; background: #fff7ee; }
+.cf-word .e { font-size: 30px; }
+.cf-word .en { font-size: 13px; font-weight: 800; color: #c97a2e; }
+.cf-word .zh { font-size: 12px; color: #a08a70; }

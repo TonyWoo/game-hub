@@ -8,6 +8,7 @@ import SurvivorGame from './games/survivor/App.jsx';
 import QuietBook from './games/quiet/index.jsx';
 import Quiet3D from './games/quiet3d/index.jsx';
 import DressUp from './games/dressup/index.jsx';
+import ChefGame from './games/chef/index.jsx';
 import BackHomeButton from './BackHomeButton.jsx';
 
 const GAMES = [
@@ -40,6 +41,12 @@ const GAMES = [
     icon: '👗',
     name: '换装小屋',
     desc: '给 3D 小朋友换衣服学单词',
+  },
+  {
+    id: 'chef',
+    icon: '🍳',
+    name: '小小厨师',
+    desc: '做美食给顾客评价',
   },
 ];
 
@@ -96,6 +103,11 @@ export default function App() {
       {route === 'dressup' && (
         <div className="game-dressup">
           <DressUp />
+        </div>
+      )}
+      {route === 'chef' && (
+        <div className="game-chef">
+          <ChefGame />
         </div>
       )}
     </div>
