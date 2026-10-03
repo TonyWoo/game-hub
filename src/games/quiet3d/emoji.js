@@ -1,0 +1,26 @@
+// emoji.js —— 112 个单词的 emoji（物品栏 / 单词本展示用）
+export const WORD_EMOJI = {
+  bed: '🛏️', pillow: '🛌', lamp: '💡', teddy_bear: '🧸', book: '📖', clock: '⏰',
+  blanket: '🛋️', toy: '🪀', rug: '🧶', curtain: '🪟', mirror: '🪞', chair: '🪑',
+  pot: '🍲', pan: '🍳', egg: '🥚', milk: '🥛', bread: '🍞', fridge: '🧊',
+  cup: '☕', spoon: '🥄', apple: '🍎', knife: '🔪', fork: '🍴', plate: '🍽️',
+  cart: '🛒', banana: '🍌', cookie: '🍪', juice: '🧃', fish: '🐟', cake: '🍰',
+  candy: '🍬', bag: '🛍️', watermelon: '🍉', donut: '🍩', grapes: '🍇',
+  flower: '🌸', tree: '🌳', butterfly: '🦋', bee: '🐝', bird: '🐦', sun: '☀️',
+  watering_can: '🚿', mushroom: '🍄', rainbow: '🌈', snail: '🐌', ladybug: '🐞', fence: '🪧',
+  cow: '🐄', pig: '🐷', horse: '🐴', sheep: '🐑', chicken: '🐔', barn: '🏚️',
+  tractor: '🚜', hay: '🌾', duck: '🦆', goat: '🐐', rooster: '🐓', pond: '🪷',
+  sandcastle: '🏰', crab: '🦀', shell: '🐚', starfish: '⭐', beach_ball: '🏐',
+  umbrella: '⛱️', towel: '🧻', wave: '🌊', sailboat: '⛵', palm_tree: '🌴',
+  sunglasses: '🕶️', bucket: '🪣',
+  schoolbag: '🎒', pencil: '✏️', crayon: '🖍️', desk: '🗄️', blackboard: '📋',
+  ruler: '📏', globe: '🌍', eraser: '🧽', scissors: '✂️', notebook: '📓',
+  cake_: '🍰', candle: '🕯️', balloon: '🎈', gift: '🎁', party_hat: '🎉',
+  ice_cream: '🍨', confetti: '🎊', cupcake: '🧁', camera: '📷', card: '💌',
+  cat: '🐱', dog: '🐶', rabbit: '🐰', bone: '🦴', ball: '⚽', fish_tank: '🐠',
+  pet_house: '🏠', hamster: '🐹', turtle: '🐢', leash: '🦮',
+  rocket: '🚀', planet: '🪐', star: '⭐', moon: '🌙', astronaut: '🧑‍🚀',
+  alien: '👽', telescope: '🔭', saturn: '🪐', ufo: '🛸', comet: '☄️',
+  space_station: '🛰️', robot: '🤖',
+};
+export const emojiOf = (id) => WORD_EMOJI[id] || '❔';
