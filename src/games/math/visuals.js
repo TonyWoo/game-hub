@@ -676,15 +676,19 @@ const DOT_PATTERNS = {
 };
 function visualDots({ count }) {
   const g = grp();
-  const card = box(3.4, 0.16, 4.4, PAL.white, 0, 1.7, 0);
-  card.rotation.x = -0.32;
+  // 闪卡立起来正对相机（像老师举起来的卡片），不再平躺：
+  // 相机在 (0,7.6,11.5)，卡片法线指向相机 -> rotation.x ≈ -0.44
+  const card = box(3.6, 4.6, 0.16, PAL.white, 0, 2.6, 0);
+  card.rotation.x = -0.44;
   g.add(card);
-  g.add(box(3.7, 0.5, 4.7, PAL.pink, 0, 1.32, -0.12, { rx: -0.32 }));
+  const back = box(3.9, 4.9, 0.1, PAL.pink, 0, 2.6, -0.2);
+  back.rotation.x = -0.44;
+  g.add(back);
   const dots = [];
   for (const [dx, dz] of DOT_PATTERNS[count]) {
-    // 直接挂在卡片上：随卡片一起倾斜，圆点永远贴在卡面上
-    // （之前用世界坐标手算贴合，符号写反导致远端圆点沉进卡片被挡住）
-    const d = sph(0.27, PAL.rose, dx, 0.34, dz, { shadow: false });
+    // 图案 [dx,dz] 映射到卡面 [x,y]：dz -> -y（远端变上端）
+    // 直接挂在卡片上：随卡片一起朝向相机，圆点永远贴在卡面上正对孩子
+    const d = sph(0.3, PAL.rose, dx, -dz, 0.36, { shadow: false });
     card.add(d);
     dots.push(d);
   }
