@@ -9,6 +9,7 @@ import QuietBook from './games/quiet/index.jsx';
 import Quiet3D from './games/quiet3d/index.jsx';
 import DressUp from './games/dressup/index.jsx';
 import ChefGame from './games/chef/index.jsx';
+import MathGame from './games/math/index.jsx';
 import BackHomeButton from './BackHomeButton.jsx';
 
 const GAMES = [
@@ -47,6 +48,12 @@ const GAMES = [
     icon: '🍳',
     name: '小小厨师',
     desc: '做美食给顾客评价',
+  },
+  {
+    id: 'math',
+    icon: '🔢',
+    name: '数学乐园 · 二年级',
+    desc: '10 关 3D 数学闯关',
   },
 ];
 
@@ -108,6 +115,11 @@ export default function App() {
       {route === 'chef' && (
         <div className="game-chef">
           <ChefGame />
+        </div>
+      )}
+      {route === 'math' && (
+        <div className="game-math">
+          <MathGame />
         </div>
       )}
     </div>
