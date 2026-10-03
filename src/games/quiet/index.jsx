@@ -16,7 +16,8 @@ const Sticker = ({ id, size = 56 }) => {
 };
 
 // ---------- 每主题场景装饰（简单 SVG 形） ----------
-// 贴纸尺寸已整体放大约 1.5 倍（场景 81px / 贴纸栏 78px / 测验 96px / 单词本 60px）
+// 贴纸尺寸：场景 110px / 贴纸栏 100px / 测验 124px / 单词本 78px / 拖拽幽灵 116px
+// 场景支持双指缩放（0.75x–2.5x）与 −/＋/⤾ 按钮；贴纸栏横向滚动（触摸惯性 + 滚轮横滑 + 箭头）
 function Decor({ themeId }) {
   switch (themeId) {
     case 'bedroom':
@@ -97,7 +98,7 @@ function WordBook({ collected, onBack }) {
               className={`q-word${got ? ' got' : ''}`}
               onClick={() => { if (got) speak(w.en); }}
             >
-              <span className="q-word-sticker">{got ? <Sticker id={w.id} size={60} /> : '❔'}</span>
+              <span className="q-word-sticker">{got ? <Sticker id={w.id} size={78} /> : '❔'}</span>
               <span className="q-word-en">{w.en}</span>
               <span className="q-word-zh">{w.zh}</span>
             </button>
@@ -111,10 +112,24 @@ function WordBook({ collected, onBack }) {
 // ---------- 主题玩：场景 + 贴纸栏（pointer 拖拽，兼容触屏） ----------
 function PlayScreen({ theme, save, commit, onBack, onQuiz }) {
   const sceneRef = useRef(null);
+  const trayRef = useRef(null);
   const placed = save.placed[theme.id] || [];
   const [bubble, setBubble] = useState(null); // { idx }
   const [drag, setDrag] = useState(null);
   const dragRef = useRef(null);
+  const ptrsRef = useRef(new Map()); // 场景上的活动手指：pointerId -> {x, y}
+  const pinchRef = useRef(null);      // 双指缩放中：{ startDist, startZoom }
+
+  // 场景缩放：只改变视图（CSS transform），不改变贴纸逻辑坐标与存档；按主题记忆
+  const [zoom, setZoom] = useState(() => (save.zoom && save.zoom[theme.id]) || 1);
+  const zoomRef = useRef(zoom);
+  const applyZoom = useCallback((z) => {
+    const nz = Math.round(Math.min(2.5, Math.max(0.75, z)) * 100) / 100;
+    zoomRef.current = nz;
+    setZoom(nz);
+    commit((s) => ({ ...s, zoom: { ...(s.zoom || {}), [theme.id]: nz } }));
+  }, [commit, theme.id]);
+  const zoomStep = useCallback((d) => applyZoom(zoomRef.current + d), [applyZoom]);
 
   const collect = useCallback((id) => {
     commit((s) => (s.collected.includes(id) ? s : { ...s, collected: [...s.collected, id] }));
@@ -165,11 +180,18 @@ function PlayScreen({ theme, save, commit, onBack, onQuiz }) {
     setBubble({ idx });
   }, [save, theme.id, collect]);
 
+  // 场景坐标换算：考虑缩放（zoom wrapper 以场景中心为原点缩放），
+  // 逻辑坐标始终是未缩放布局下的百分比，存档不受缩放影响
   const scenePoint = (clientX, clientY) => {
     const r = sceneRef.current.getBoundingClientRect();
+    const z = zoomRef.current;
+    const cx = r.left + r.width / 2;
+    const cy = r.top + r.height / 2;
+    const lx = cx + (clientX - cx) / z;
+    const ly = cy + (clientY - cy) / z;
     return {
-      x: ((clientX - r.left) / r.width) * 100,
-      y: ((clientY - r.top) / r.height) * 100,
+      x: ((lx - r.left) / r.width) * 100,
+      y: ((ly - r.top) / r.height) * 100,
       inside: clientX >= r.left && clientX <= r.right && clientY >= r.top && clientY <= r.bottom,
     };
   };
@@ -200,6 +222,49 @@ function PlayScreen({ theme, save, commit, onBack, onQuiz }) {
     setDrag(d);
   };
 
+  // ---------- 场景手势：单指拖贴纸 / 双指缩放 ----------
+  // 规则：单指落在贴纸上 = 拖贴纸（startDrag 处理）；出现第二根手指时取消当前拖拽、切换为缩放
+  const pinchDist = () => {
+    const [a, b] = [...ptrsRef.current.values()];
+    return Math.hypot(a.x - b.x, a.y - b.y);
+  };
+  const onSceneDown = (e) => {
+    ptrsRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (ptrsRef.current.size === 2) {
+      dragRef.current = null; // 取消当前拖拽
+      setDrag(null);
+      pinchRef.current = { startDist: pinchDist(), startZoom: zoomRef.current };
+    }
+  };
+  const onSceneMove = (e) => {
+    if (!ptrsRef.current.has(e.pointerId)) return;
+    ptrsRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    const p = pinchRef.current;
+    if (p && ptrsRef.current.size >= 2 && p.startDist > 0) {
+      applyZoom(p.startZoom * (pinchDist() / p.startDist));
+    }
+  };
+  const onSceneUp = (e) => {
+    ptrsRef.current.delete(e.pointerId);
+    if (ptrsRef.current.size < 2) pinchRef.current = null;
+  };
+
+  // 手指在场景外抬起/取消也要清理（兜底，常驻监听）
+  useEffect(() => {
+    const release = (e) => {
+      if (ptrsRef.current.has(e.pointerId)) {
+        ptrsRef.current.delete(e.pointerId);
+        if (ptrsRef.current.size < 2) pinchRef.current = null;
+      }
+    };
+    window.addEventListener('pointerup', release);
+    window.addEventListener('pointercancel', release);
+    return () => {
+      window.removeEventListener('pointerup', release);
+      window.removeEventListener('pointercancel', release);
+    };
+  }, []);
+
   useEffect(() => {
     if (!drag) return;
     const onMove = (e) => {
@@ -215,15 +280,37 @@ function PlayScreen({ theme, save, commit, onBack, onQuiz }) {
       setDrag(null);
       if (d) handleDrop(d);
     };
+    // pointercancel（浏览器接管手势，如贴纸栏横向滚动）：静默取消拖拽，不放置贴纸
+    const onCancel = () => {
+      dragRef.current = null;
+      setDrag(null);
+    };
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
-    window.addEventListener('pointercancel', onUp);
+    window.addEventListener('pointercancel', onCancel);
     return () => {
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
-      window.removeEventListener('pointercancel', onUp);
+      window.removeEventListener('pointercancel', onCancel);
     };
   }, [!!drag, handleDrop]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 贴纸栏：桌面端纵向滚轮转为横向滚动
+  useEffect(() => {
+    const el = trayRef.current;
+    if (!el) return;
+    const onWheel = (e) => {
+      if (el.scrollWidth > el.clientWidth && Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        e.preventDefault();
+        el.scrollLeft += e.deltaY;
+      }
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, []);
+  const trayScrollBy = (dx) => {
+    if (trayRef.current) trayRef.current.scrollBy({ left: dx, behavior: 'smooth' });
+  };
 
   const bubbleWord = bubble ? wordOf((save.placed[theme.id] || [])[bubble.idx]?.id || '') : null;
   const bubblePos = bubble ? (save.placed[theme.id] || [])[bubble.idx] : null;
@@ -240,46 +327,62 @@ function PlayScreen({ theme, save, commit, onBack, onQuiz }) {
         ref={sceneRef}
         className="q-scene"
         style={{ background: `linear-gradient(165deg, ${theme.bg[0]}, ${theme.bg[1]})` }}
+        onPointerDown={onSceneDown}
+        onPointerMove={onSceneMove}
+        onPointerUp={onSceneUp}
+        onPointerCancel={onSceneUp}
       >
-        <svg className="q-decor" viewBox="0 0 100 100" preserveAspectRatio="none">
-          <Decor themeId={theme.id} />
-        </svg>
-        {placed.map((p, i) => (
-          <span
-            key={i}
-            className="q-placed"
-            style={{ left: p.x + '%', top: p.y + '%' }}
-            onPointerDown={(e) => startDrag(e, { id: p.id, fromTray: false, idx: i })}
-          >
-            <Sticker id={p.id} size={81} />
-          </span>
-        ))}
-        {bubble && bubbleWord && bubblePos && (
-          <div className="q-bubble" style={{ left: bubblePos.x + '%', top: bubblePos.y + '%' }}>
-            <div className="q-bubble-en">{bubbleWord.en}</div>
-            <div className="q-bubble-zh">{bubbleWord.zh}</div>
-            <div className="q-bubble-row">
-              <button className="q-mini" onClick={() => speak(bubbleWord.en)}>🔊</button>
-              <button className="q-mini" onClick={() => removePlaced(bubble.idx)}>❌</button>
+        <div className="q-zoom" style={{ transform: `scale(${zoom})` }}>
+          <svg className="q-decor" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <Decor themeId={theme.id} />
+          </svg>
+          {placed.map((p, i) => (
+            <span
+              key={i}
+              className="q-placed"
+              style={{ left: p.x + '%', top: p.y + '%' }}
+              onPointerDown={(e) => startDrag(e, { id: p.id, fromTray: false, idx: i })}
+            >
+              <Sticker id={p.id} size={110} />
+            </span>
+          ))}
+          {bubble && bubbleWord && bubblePos && (
+            <div className="q-bubble" style={{ left: bubblePos.x + '%', top: bubblePos.y + '%' }}>
+              <div className="q-bubble-en">{bubbleWord.en}</div>
+              <div className="q-bubble-zh">{bubbleWord.zh}</div>
+              <div className="q-bubble-row">
+                <button className="q-mini" onClick={() => speak(bubbleWord.en)}>🔊</button>
+                <button className="q-mini" onClick={() => removePlaced(bubble.idx)}>❌</button>
+              </div>
             </div>
-          </div>
-        )}
-        {placed.length === 0 && (
-          <div className="q-scene-hint">把下面的贴纸拖上来布置吧 👆</div>
-        )}
+          )}
+          {placed.length === 0 && (
+            <div className="q-scene-hint">把下面的贴纸拖上来布置吧 👆</div>
+          )}
+        </div>
+        <div className="q-zoom-btns" onPointerDown={(e) => e.stopPropagation()}>
+          <button className="q-zoom-btn" onClick={() => zoomStep(-0.25)} aria-label="缩小">−</button>
+          <span className="q-zoom-tag">{Math.round(zoom * 100)}%</span>
+          <button className="q-zoom-btn" onClick={() => zoomStep(0.25)} aria-label="放大">＋</button>
+          <button className="q-zoom-btn" onClick={() => applyZoom(1)} aria-label="重置缩放">⤾</button>
+        </div>
       </div>
 
       <div className="q-tray-wrap">
-        <div className="q-tray">
-          {theme.items.map((it) => (
-            <span
-              key={it.id}
-              className="q-tray-item"
-              onPointerDown={(e) => startDrag(e, { id: it.id, fromTray: true })}
-            >
-              <Sticker id={it.id} size={78} />
-            </span>
-          ))}
+        <div className="q-tray-scroll">
+          <button className="q-tray-arrow left" onClick={() => trayScrollBy(-280)} aria-label="向左滚动">‹</button>
+          <div className="q-tray" ref={trayRef}>
+            {theme.items.map((it) => (
+              <span
+                key={it.id}
+                className="q-tray-item"
+                onPointerDown={(e) => startDrag(e, { id: it.id, fromTray: true })}
+              >
+                <Sticker id={it.id} size={100} />
+              </span>
+            ))}
+          </div>
+          <button className="q-tray-arrow right" onClick={() => trayScrollBy(280)} aria-label="向右滚动">›</button>
         </div>
         {placed.length > 0 && (
           <button className="q-btn q-btn-clear" onClick={clearAll}>🧹 全部收起来</button>
@@ -288,7 +391,7 @@ function PlayScreen({ theme, save, commit, onBack, onQuiz }) {
 
       {drag && (
         <span className="q-ghost" style={{ left: drag.x, top: drag.y }}>
-          <Sticker id={drag.id} size={90} />
+          <Sticker id={drag.id} size={116} />
         </span>
       )}
     </div>
@@ -391,7 +494,7 @@ function QuizScreen({ theme, save, commit, onBack }) {
                 className={`q-quiz-opt${wrongId === it.id ? ' wrong' : ''}${goodId === it.id ? ' good' : ''}`}
                 onClick={() => pick(it)}
               >
-                <Sticker id={it.id} size={96} />
+                <Sticker id={it.id} size={124} />
               </button>
             ))}
           </div>
@@ -435,6 +538,7 @@ export default function QuietBook() {
       )}
       {screen === 'play' && (
         <PlayScreen
+          key={theme.id}
           theme={theme}
           save={save}
           commit={commit}
