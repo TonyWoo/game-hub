@@ -8,15 +8,26 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import './quiet3d.css';
 import { THEMES, ALL_WORDS, TOTAL_WORDS, unlockNeed, wordOf } from '../quiet/themes.js';
-import { speak } from '../quiet/speech.js';
+import { speak, speakSeq } from '../quiet/speech.js';
 import { loadSave, persistSave } from './storage.js';
 import { buildModel, auditModels } from './models/index.js';
+import { buildKid, KID_SPOTS } from './kids.js';
 import { disposeGroup } from './models/helpers.js';
 import { WORLDS, makeParticles } from './worlds.js';
 import { emojiOf } from './emoji.js';
 
 const CAM_HOME = { pos: [7, 6.5, 9.5], tgt: [0, 0.8, 0] };
 const GROUND_R = 4.6;
+
+// 放置夸奖池（连续两次不重复）
+const PRAISE = ['Great job!', 'Wonderful!', 'Amazing!', 'Super!', 'Fantastic!', 'Well done!', 'Awesome!', 'Beautiful!'];
+let lastPraiseIdx = -1;
+function nextPraise() {
+  let i;
+  do { i = Math.floor(Math.random() * PRAISE.length); } while (i === lastPraiseIdx);
+  lastPraiseIdx = i;
+  return PRAISE[i];
+}
 
 // ---------- 主题选择 ----------
 function ThemeSelect({ collected, onOpen, onWords }) {
@@ -88,8 +99,8 @@ function PlayScreen({ theme, save, commit, onBack }) {
 
   const setArmed = (id) => { armedRef.current = id; setArmedState(id); };
 
-  const showBubble = useCallback((id) => {
-    setBubble({ id });
+  const showBubble = useCallback((id, praise) => {
+    setBubble({ id, praise: praise || null });
     if (bubbleTimer.current) clearTimeout(bubbleTimer.current);
     bubbleTimer.current = setTimeout(() => setBubble(null), 5000);
   }, []);
@@ -138,6 +149,32 @@ function PlayScreen({ theme, save, commit, onBack }) {
     scene.add(world);
     const particles = makeParticles(W.particle);
     if (particles) scene.add(particles);
+
+    // 小朋友 NPC（纯装饰）：待机摇摆，点中挥手+弹跳
+    const kids = [];
+    const kidPickables = [];
+    (KID_SPOTS[theme.id] || []).forEach((s) => {
+      try {
+        const k = buildKid(s);
+        k.position.set(s.x, 0, s.z);
+        const face = Math.atan2(CAM_HOME.pos[0] - s.x, CAM_HOME.pos[2] - s.z);
+        k.rotation.y = face;
+        k.userData.baseRotY = face;
+        scene.add(k);
+        kids.push(k);
+        kidPickables.push(k);
+      } catch (e) {
+        console.warn('[quiet3d] 小朋友构造失败:', e);
+      }
+    });
+    const pickKid = (e) => {
+      setPtr(e); ray.setFromCamera(ptr, camera);
+      const hits = ray.intersectObjects(kidPickables, true);
+      if (!hits.length) return null;
+      let o = hits[0].object;
+      while (o && !o.userData.isKid) o = o.parent;
+      return o;
+    };
 
     // 已放置物品
     const pickables = [];   // 单词模型 group 列表
@@ -233,13 +270,27 @@ function PlayScreen({ theme, save, commit, onBack }) {
         if (g) answerQuiz(g.userData.wordId);
         return;
       }
+      // 点中小朋友：挥手+弹跳（纯装饰，不放置/不拖拽）
+      if (!armedRef.current) {
+        const kid = pickKid(e);
+        if (kid) { kid.userData.wave = 1.1; return; }
+      }
       if (armedRef.current) {
         const p = groundPoint(e);
         if (p) {
           const r = Math.hypot(p.x, p.z);
           const cl = r > GROUND_R ? GROUND_R / r : 1;
-          const g = spawnAt(armedRef.current, p.x * cl, p.z * cl);
-          if (g) { persistPlaced(); setArmed(null); }
+          const id = armedRef.current;
+          const g = spawnAt(id, p.x * cl, p.z * cl);
+          if (g) {
+            persistPlaced(); setArmed(null);
+            // 放置成功：读英文 + 随机英文夸奖
+            const w = wordOf(id);
+            const praise = nextPraise();
+            speakSeq([w.en + '!', praise]);
+            showBubble(id, praise);
+            collect(id);
+          }
         }
         return;
       }
@@ -361,6 +412,21 @@ function PlayScreen({ theme, save, commit, onBack }) {
           a.g.scale.setScalar(Math.max(0.01, a.t * s));
         }
       }
+      // 小朋友：待机摇摆 / 挥手+弹跳
+      for (const k of kids) {
+        const u = k.userData;
+        if (u.wave > 0) {
+          u.wave -= dt;
+          u.armR.rotation.z = 2.5 + Math.sin(t * 16) * 0.45; // 举手挥动
+          u.armL.rotation.z = -0.12;
+          k.position.y = Math.abs(Math.sin(t * 10)) * 0.28;  // 开心弹跳
+          k.rotation.z = 0;
+          if (u.wave <= 0) { u.armR.rotation.z = 0.12; k.position.y = 0; }
+        } else {
+          k.rotation.z = Math.sin(t * 2 + u.phase) * 0.05;   // 待机摇摆
+          k.position.y = Math.abs(Math.sin(t * 2.2 + u.phase)) * 0.04;
+        }
+      }
       // 选中脉冲
       if (selected) {
         pulse += dt * 5;
@@ -422,7 +488,7 @@ function PlayScreen({ theme, save, commit, onBack }) {
         {quiz && quiz.fb && <div className="q3-quiz-fb">{quiz.fb}</div>}
         {bubble && !quiz && (() => { const w = wordOf(bubble.id); return (
           <div className="q3-bubble">
-            <div className="b-en">{w.en}</div>
+            <div className="b-en">{w.en}!{bubble.praise ? ` ${bubble.praise}` : ''}</div>
             <div className="b-zh">{w.zh} <button className="b-replay" onClick={() => speak(w.en)}>🔊</button></div>
           </div>
         ); })()}

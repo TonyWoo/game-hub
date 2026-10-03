@@ -3,6 +3,19 @@
 // 照抄 pet-paradise 的实现：不需要网络、不需要外部服务
 // ============================================================
 
+// 尽量选一个英文女声
+function pickVoice() {
+  try {
+    const voices = window.speechSynthesis.getVoices();
+    return voices.find((x) => x.lang.startsWith('en') && x.name.toLowerCase().includes('female'))
+      || voices.find((x) => x.lang.startsWith('en-US'))
+      || voices.find((x) => x.lang.startsWith('en'))
+      || null;
+  } catch {
+    return null;
+  }
+}
+
 // 朗读英文，语速放慢一点，适合小朋友跟读
 export function speak(text) {
   try {
@@ -13,13 +26,35 @@ export function speak(text) {
     u.lang = 'en-US';
     u.rate = 0.85;   // 稍慢
     u.pitch = 1.1;   // 稍高，更亲切
-    // 尽量选一个英文女声
-    const voices = synth.getVoices();
-    const v = voices.find((x) => x.lang.startsWith('en') && x.name.toLowerCase().includes('female'))
-      || voices.find((x) => x.lang.startsWith('en-US'))
-      || voices.find((x) => x.lang.startsWith('en'));
+    const v = pickVoice();
     if (v) u.voice = v;
     synth.speak(u);
+  } catch {
+    // 不支持的浏览器直接忽略
+  }
+}
+
+// 顺序朗读多句（前一句播完再播下一句，不重叠）
+// 用于"读单词+夸奖"等场景；语调稍欢快
+export function speakSeq(texts) {
+  try {
+    const synth = window.speechSynthesis;
+    if (!synth || !texts || !texts.length) return;
+    synth.cancel();
+    const v = pickVoice();
+    let i = 0;
+    const next = () => {
+      if (i >= texts.length) return;
+      const u = new SpeechSynthesisUtterance(texts[i++]);
+      u.lang = 'en-US';
+      u.rate = 0.9;
+      u.pitch = 1.15;
+      if (v) u.voice = v;
+      u.onend = next;
+      u.onerror = next; // 出错也继续下一句，避免卡死
+      synth.speak(u);
+    };
+    next();
   } catch {
     // 不支持的浏览器直接忽略
   }
