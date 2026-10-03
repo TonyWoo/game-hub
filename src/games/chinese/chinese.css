@@ -1,0 +1,139 @@
+/* ============================================================
+   math.css —— 语文乐园样式（作用域 .game-chinese）
+   ============================================================ */
+.game-chinese {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(180deg, #fff6ec 0%, #ffeef5 100%);
+  font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.ch-root { position: absolute; inset: 0; display: flex; flex-direction: column; }
+
+/* ---------- 选关卡 ---------- */
+.ch-levels { flex: 1; overflow-y: auto; padding: 18px 14px 90px; }
+.ch-title { text-align: center; font-size: 26px; margin: 8px 0 2px; color: #5a3d2b; }
+.ch-sub { text-align: center; color: #a08a76; margin: 0 0 14px; font-size: 14px; }
+.ch-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
+  max-width: 520px; margin: 0 auto;
+}
+.ch-card {
+  border: none; border-radius: 18px; padding: 14px 10px;
+  background: #fff; box-shadow: 0 4px 14px rgba(190, 120, 60, .12);
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  cursor: pointer;
+}
+.ch-card:active { transform: scale(.96); }
+.ch-card.locked { opacity: .55; filter: grayscale(.4); }
+.ch-num { font-size: 12px; color: #c49a6c; font-weight: 700; }
+.ch-icon { font-size: 40px; line-height: 1.1; }
+.ch-name { font-size: 16px; font-weight: 800; color: #5a3d2b; }
+.ch-desc { font-size: 12px; color: #a08a76; }
+.ch-stars { font-size: 16px; color: #f5a623; letter-spacing: 2px; }
+
+/* ---------- 答题页 ---------- */
+.ch-play { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.ch-topbar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px; background: rgba(255,255,255,.94); z-index: 5;
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
+}
+.ch-icon-btn {
+  border: none; background: #ffe9d6; border-radius: 12px; padding: 6px 12px;
+  font-size: 14px; font-weight: 700; color: #8a5a3b; cursor: pointer;
+}
+.ch-tname { font-weight: 800; color: #5a3d2b; font-size: 15px; flex: 1; }
+.ch-prog { font-size: 13px; font-weight: 700; color: #c49a6c; }
+
+.ch-stage { position: relative; flex: 1; min-height: 0; }
+.ch-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.ch-chip {
+  position: absolute; left: 0; top: 0;
+  width: 34px; height: 34px; border-radius: 50%;
+  background: #fff; border: 3px solid #f5a623; color: #b97c1a;
+  font-size: 18px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,.15);
+  pointer-events: none;
+}
+
+.ch-qcard {
+  margin: 10px 14px 6px; padding: 14px;
+  background: #fff; border-radius: 16px; text-align: center;
+  font-size: 24px; font-weight: 800; color: #4a3423;
+  box-shadow: 0 3px 10px rgba(190, 120, 60, .12);
+  z-index: 5;
+}
+/* v2：观察提示 / 成长型思维提示 / 重播 */
+.ch-watch {
+  margin: 8px 14px 0; padding: 8px;
+  text-align: center; font-size: 14px; font-weight: 700; color: #b97c1a;
+  background: #fff7e6; border-radius: 12px; z-index: 5;
+  animation: ch-pulse 1.2s infinite;
+}
+@keyframes ch-pulse { 50% { opacity: .65; } }
+.ch-hint {
+  margin: 6px 14px 0; padding: 10px 12px;
+  background: #e8f4ff; border-radius: 12px;
+  font-size: 14px; font-weight: 700; color: #2b6cb0;
+  text-align: center; z-index: 5;
+  animation: ch-pop .25s;
+}
+.ch-tapzone {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  padding: 10px 14px 20px; z-index: 5;
+}
+.ch-tap-hint { font-size: 16px; font-weight: 800; color: #b97c1a; }
+.ch-replay-row { display: flex; justify-content: center; padding: 0 14px 16px; z-index: 5; }
+.ch-replay {
+  border: none; background: #e8f4ff; color: #2b6cb0;
+  border-radius: 12px; padding: 8px 16px;
+  font-size: 14px; font-weight: 800; cursor: pointer;
+}
+.ch-replay:active { transform: scale(.95); }
+.ch-opts {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  padding: 6px 14px 18px; z-index: 5;
+}
+.ch-opt {
+  border: 3px solid #ffe1c2; background: #fff; border-radius: 16px;
+  padding: 14px 8px; font-size: 20px; font-weight: 800; color: #5a3d2b;
+  cursor: pointer; transition: transform .08s;
+}
+.ch-opt:active { transform: scale(.95); }
+.ch-opt.ok { background: #d9f7c4; border-color: #7ed491; color: #2f7a3d; }
+.ch-opt.no { background: #ffe0e0; border-color: #ff8a8a; animation: ch-shake .45s; }
+.ch-opt:disabled { cursor: default; }
+@keyframes ch-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-7px); }
+  50% { transform: translateX(7px); }
+  75% { transform: translateX(-4px); }
+}
+
+/* ---------- 结算 ---------- */
+.ch-mask {
+  position: absolute; inset: 0; z-index: 20;
+  background: rgba(90, 61, 43, .45);
+  display: flex; align-items: center; justify-content: center;
+  animation: ch-pop .25s;
+}
+@keyframes ch-pop { from { opacity: 0; } }
+.ch-result {
+  background: #fff; border-radius: 24px; padding: 28px 34px;
+  text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,.2);
+  animation: ch-zoom .3s;
+}
+@keyframes ch-zoom { from { transform: scale(.7); } }
+.ch-rstars { font-size: 52px; color: #f5a623; letter-spacing: 6px; }
+.ch-rtext { font-size: 17px; font-weight: 700; color: #5a3d2b; margin: 10px 0 18px; }
+.ch-rbtns { display: flex; gap: 10px; justify-content: center; }
+.ch-btn {
+  border: none; border-radius: 14px; padding: 10px 18px;
+  font-size: 15px; font-weight: 800; cursor: pointer;
+  background: #ffe9d6; color: #8a5a3b;
+}
+.ch-btn.primary { background: #ff9d5c; color: #fff; }

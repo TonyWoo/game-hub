@@ -10,6 +10,7 @@ import Quiet3D from './games/quiet3d/index.jsx';
 import DressUp from './games/dressup/index.jsx';
 import ChefGame from './games/chef/index.jsx';
 import MathGame from './games/math/index.jsx';
+import ChineseGame from './games/chinese/index.jsx';
 import BackHomeButton from './BackHomeButton.jsx';
 
 const GAMES = [
@@ -53,7 +54,13 @@ const GAMES = [
     id: 'math',
     icon: '🔢',
     name: '数学乐园 · 二年级',
-    desc: '10 关 3D 数学闯关',
+    desc: '11 关 3D 数学闯关',
+  },
+  {
+    id: 'chinese',
+    icon: '📖',
+    name: '语文乐园 · 二年级',
+    desc: '10 关 3D 语文闯关，听读汉字',
   },
 ];
 
@@ -120,6 +127,11 @@ export default function App() {
       {route === 'math' && (
         <div className="game-math">
           <MathGame />
+        </div>
+      )}
+      {route === 'chinese' && (
+        <div className="game-chinese">
+          <ChineseGame />
         </div>
       )}
     </div>
