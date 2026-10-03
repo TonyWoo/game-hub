@@ -682,14 +682,11 @@ function visualDots({ count }) {
   g.add(box(3.7, 0.5, 4.7, PAL.pink, 0, 1.32, -0.12, { rx: -0.32 }));
   const dots = [];
   for (const [dx, dz] of DOT_PATTERNS[count]) {
-    const d = sph(0.27, PAL.rose, dx, 0, dz, { shadow: false });
-    // 贴在倾斜卡面上
-    const holder = grp(d);
-    holder.position.set(dx, 1.78 - dz * Math.tan(0.32) * 0.5, dz * 0.95);
-    holder.rotation.x = -0.32;
-    d.position.set(0, 0.12, 0);
-    g.add(holder);
-    dots.push(holder);
+    // 直接挂在卡片上：随卡片一起倾斜，圆点永远贴在卡面上
+    // （之前用世界坐标手算贴合，符号写反导致远端圆点沉进卡片被挡住）
+    const d = sph(0.27, PAL.rose, dx, 0.34, dz, { shadow: false });
+    card.add(d);
+    dots.push(d);
   }
   const dur = 2.8;
   return {
