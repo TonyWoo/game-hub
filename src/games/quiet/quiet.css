@@ -87,7 +87,11 @@
 }
 .game-quiet .q-theme-card:not(.locked):active { transform: scale(0.96); }
 .game-quiet .q-theme-card.locked { opacity: 0.75; filter: grayscale(0.5); cursor: default; }
-.game-quiet .q-theme-emoji { font-size: 44px; }
+.game-quiet .q-theme-thumb {
+  width: 100%; height: 84px; border-radius: 14px; overflow: hidden;
+  margin-bottom: 8px; border: 2px solid #f3ecf7; pointer-events: none;
+}
+.game-quiet .q-theme-thumb svg { width: 100%; height: 100%; display: block; }
 .game-quiet .q-theme-zh { font-size: 17px; font-weight: 800; color: var(--qink); }
 .game-quiet .q-theme-en { font-size: 13px; color: var(--qink-soft); }
 .game-quiet .q-lock-tip {

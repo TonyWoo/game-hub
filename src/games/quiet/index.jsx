@@ -6,6 +6,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import './quiet.css';
 import { THEMES, ALL_WORDS, TOTAL_WORDS, unlockNeed, wordOf } from './themes.js';
 import { STICKERS } from './stickers.jsx';
+import { SceneBackground, BgArt } from './backgrounds.jsx';
 import { speak } from './speech.js';
 import { loadSave, persistSave } from './storage.js';
 
@@ -14,40 +15,6 @@ const Sticker = ({ id, size = 56 }) => {
   if (!C) return null;
   return <span className="q-sticker-svg" style={{ width: size, height: size }}><C /></span>;
 };
-
-// ---------- 每主题场景装饰（简单 SVG 形） ----------
-// 贴纸尺寸：场景 110px / 贴纸栏 100px / 测验 124px / 单词本 78px / 拖拽幽灵 116px
-// 场景支持双指缩放（0.75x–2.5x）与 −/＋/⤾ 按钮；贴纸栏横向滚动（触摸惯性 + 滚轮横滑 + 箭头）
-function Decor({ themeId }) {
-  switch (themeId) {
-    case 'bedroom':
-      return (<g>
-        <rect x="8%" y="6%" width="18%" height="14%" rx="6" fill="#fff" opacity="0.7" />
-        <circle cx="85%" cy="12%" r="4%" fill="#ffd93d" opacity="0.8" />
-      </g>);
-    case 'garden':
-      return (<g>
-        <ellipse cx="15%" cy="88%" rx="20%" ry="10%" fill="#8fd6a0" opacity="0.5" />
-        <ellipse cx="85%" cy="90%" rx="22%" ry="9%" fill="#8fd6a0" opacity="0.5" />
-        <circle cx="80%" cy="15%" r="5%" fill="#ffd93d" opacity="0.9" />
-      </g>);
-    case 'farm':
-      return (<g><ellipse cx="50%" cy="95%" rx="45%" ry="12%" fill="#8fd6a0" opacity="0.45" /></g>);
-    case 'beach':
-      return (<g><ellipse cx="50%" cy="96%" rx="48%" ry="14%" fill="#f2d8a8" opacity="0.8" /></g>);
-    case 'space':
-      return (<g fill="#fff">
-        <circle cx="10%" cy="12%" r="1.5" /><circle cx="30%" cy="8%" r="1" /><circle cx="55%" cy="15%" r="1.5" />
-        <circle cx="75%" cy="10%" r="1" /><circle cx="90%" cy="25%" r="1.5" /><circle cx="20%" cy="35%" r="1" />
-        <circle cx="65%" cy="40%" r="1.2" /><circle cx="85%" cy="50%" r="1" /><circle cx="45%" cy="30%" r="1" />
-      </g>);
-    default:
-      return (<g>
-        <circle cx="12%" cy="14%" r="4%" fill="#fff" opacity="0.6" />
-        <circle cx="88%" cy="18%" r="3%" fill="#fff" opacity="0.6" />
-      </g>);
-  }
-}
 
 // ---------- 主题选择页 ----------
 function ThemeSelect({ collected, onOpen, onWords }) {
@@ -69,8 +36,12 @@ function ThemeSelect({ collected, onOpen, onWords }) {
               style={{ '--accent': t.accent }}
               onClick={() => !locked && onOpen(i)}
             >
-              <span className="q-theme-emoji">{locked ? '🔒' : t.emoji}</span>
-              <span className="q-theme-zh">{t.zh}</span>
+              <span className="q-theme-thumb" aria-hidden="true">
+                <svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
+                  <BgArt themeId={t.id} />
+                </svg>
+              </span>
+              <span className="q-theme-zh">{locked ? '🔒' : t.emoji} {t.zh}</span>
               <span className="q-theme-en">{t.en}</span>
               {locked && <span className="q-lock-tip">还差 {need - collected.length} 个单词</span>}
             </button>
@@ -333,9 +304,7 @@ function PlayScreen({ theme, save, commit, onBack, onQuiz }) {
         onPointerCancel={onSceneUp}
       >
         <div className="q-zoom" style={{ transform: `scale(${zoom})` }}>
-          <svg className="q-decor" viewBox="0 0 100 100" preserveAspectRatio="none">
-            <Decor themeId={theme.id} />
-          </svg>
+          <SceneBackground themeId={theme.id} />
           {placed.map((p, i) => (
             <span
               key={i}
