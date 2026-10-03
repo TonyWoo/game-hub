@@ -103,31 +103,38 @@ body {
   white-space: nowrap;
 }
 
-/* 各游戏页：容器 + 回大厅按钮 */
+/* 各游戏页容器 */
 .game-page {
   position: relative;
   min-height: 100vh;
 }
-.back-btn {
+/* 悬浮"回大厅"小圆钮：可拖拽，半透明；z-index 高于游戏画布但低于各游戏弹窗 */
+.back-home-fab {
   position: fixed;
-  top: 10px;
-  left: 10px;
-  z-index: 9999;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  z-index: 40;
   background: rgba(255, 255, 255, 0.92);
   border: 2px solid #ffd6e7;
-  border-radius: 999px;
-  padding: 8px 16px;
-  font-size: 14px;
-  font-weight: 700;
-  color: #ff6b9d;
+  font-size: 22px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: grab;
+  opacity: 0.55;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
   font-family: inherit;
-  cursor: pointer;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  transition: opacity 0.2s ease;
 }
-.back-btn:active { transform: scale(0.95); }
-/* 像素幸存者是暗色全屏，按钮配色适配 */
-.game-page.dark .back-btn {
+.back-home-fab:hover { opacity: 1; }
+.back-home-fab.dragging { opacity: 1; cursor: grabbing; }
+.back-home-fab.dark {
   background: rgba(20, 24, 38, 0.9);
   border-color: #2a3350;
-  color: #9fb3d8;
 }

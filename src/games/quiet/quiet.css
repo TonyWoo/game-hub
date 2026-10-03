@@ -98,7 +98,7 @@
 /* ---------- 场景 ---------- */
 .game-quiet .q-scene {
   position: relative; width: 100%;
-  aspect-ratio: 4 / 3; max-height: 52vh;
+  aspect-ratio: 4 / 3; max-height: 60vh;
   border-radius: var(--qradius); overflow: hidden;
   border: 3px solid #fff;
   box-shadow: 0 6px 18px rgba(0,0,0,0.08);
@@ -148,8 +148,8 @@
   padding: 12px;
 }
 .game-quiet .q-tray-item {
-  flex: none; width: 68px; height: 68px;
-  background: #fff; border-radius: 16px;
+  flex: none; width: 102px; height: 102px;
+  background: #fff; border-radius: 20px;
   display: flex; align-items: center; justify-content: center;
   border: 2px solid #f3ecf7; cursor: grab; touch-action: none;
   box-shadow: 0 2px 6px rgba(0,0,0,0.05);
@@ -207,4 +207,4 @@
 .game-quiet .q-word:active { transform: scale(0.95); }
 .game-quiet .q-word-en { font-size: 14px; font-weight: 800; color: var(--qpink-deep); }
 .game-quiet .q-word-zh { font-size: 12px; color: var(--qink-soft); }
-.game-quiet .q-word-sticker { height: 40px; display: flex; align-items: center; }
+.game-quiet .q-word-sticker { height: 60px; display: flex; align-items: center; }

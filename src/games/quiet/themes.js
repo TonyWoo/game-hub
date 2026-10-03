@@ -1,5 +1,5 @@
 // ============================================================
-// themes.js —— 10 个主题 × 9 个物品 = 90 词（去重后 83 个不同单词）
+// themes.js —— 10 个主题 × 12 个物品 = 120 词（去重后 112 个不同单词）
 // id 规则：英文小写 + 下划线；跨主题重复的词共用同一张贴纸
 // ============================================================
 
@@ -19,6 +19,9 @@ export const THEMES = [
       { id: 'blanket', en: 'blanket', zh: '毯子' },
       { id: 'toy', en: 'toy', zh: '玩具' },
       { id: 'rug', en: 'rug', zh: '地毯' },
+      { id: 'curtain', en: 'curtain', zh: '窗帘' },
+      { id: 'mirror', en: 'mirror', zh: '镜子' },
+      { id: 'chair', en: 'chair', zh: '椅子' },
     ]),
   },
   {
@@ -34,6 +37,9 @@ export const THEMES = [
       { id: 'cup', en: 'cup', zh: '杯子' },
       { id: 'spoon', en: 'spoon', zh: '勺子' },
       { id: 'apple', en: 'apple', zh: '苹果' },
+      { id: 'knife', en: 'knife', zh: '刀' },
+      { id: 'fork', en: 'fork', zh: '叉子' },
+      { id: 'plate', en: 'plate', zh: '盘子' },
     ]),
   },
   {
@@ -49,6 +55,9 @@ export const THEMES = [
       { id: 'candy', en: 'candy', zh: '糖果' },
       { id: 'bag', en: 'bag', zh: '袋子' },
       { id: 'watermelon', en: 'watermelon', zh: '西瓜' },
+      { id: 'milk', en: 'milk', zh: '牛奶' },
+      { id: 'donut', en: 'donut', zh: '甜甜圈' },
+      { id: 'grapes', en: 'grapes', zh: '葡萄' },
     ]),
   },
   {
@@ -64,6 +73,9 @@ export const THEMES = [
       { id: 'watering_can', en: 'watering can', zh: '洒水壶' },
       { id: 'mushroom', en: 'mushroom', zh: '蘑菇' },
       { id: 'rainbow', en: 'rainbow', zh: '彩虹' },
+      { id: 'snail', en: 'snail', zh: '蜗牛' },
+      { id: 'ladybug', en: 'ladybug', zh: '瓢虫' },
+      { id: 'fence', en: 'fence', zh: '篱笆' },
     ]),
   },
   {
@@ -79,6 +91,9 @@ export const THEMES = [
       { id: 'tractor', en: 'tractor', zh: '拖拉机' },
       { id: 'hay', en: 'hay', zh: '干草' },
       { id: 'duck', en: 'duck', zh: '鸭子' },
+      { id: 'goat', en: 'goat', zh: '山羊' },
+      { id: 'rooster', en: 'rooster', zh: '公鸡' },
+      { id: 'pond', en: 'pond', zh: '池塘' },
     ]),
   },
   {
@@ -94,6 +109,9 @@ export const THEMES = [
       { id: 'towel', en: 'towel', zh: '毛巾' },
       { id: 'wave', en: 'wave', zh: '海浪' },
       { id: 'sailboat', en: 'sailboat', zh: '帆船' },
+      { id: 'palm_tree', en: 'palm tree', zh: '棕榈树' },
+      { id: 'sunglasses', en: 'sunglasses', zh: '太阳镜' },
+      { id: 'bucket', en: 'bucket', zh: '水桶' },
     ]),
   },
   {
@@ -109,6 +127,9 @@ export const THEMES = [
       { id: 'clock', en: 'clock', zh: '时钟' },
       { id: 'globe', en: 'globe', zh: '地球仪' },
       { id: 'book', en: 'book', zh: '书' },
+      { id: 'eraser', en: 'eraser', zh: '橡皮' },
+      { id: 'scissors', en: 'scissors', zh: '剪刀' },
+      { id: 'notebook', en: 'notebook', zh: '笔记本' },
     ]),
   },
   {
@@ -124,6 +145,9 @@ export const THEMES = [
       { id: 'candy', en: 'candy', zh: '糖果' },
       { id: 'juice', en: 'juice', zh: '果汁' },
       { id: 'confetti', en: 'confetti', zh: '彩纸' },
+      { id: 'cupcake', en: 'cupcake', zh: '纸杯蛋糕' },
+      { id: 'camera', en: 'camera', zh: '相机' },
+      { id: 'card', en: 'card', zh: '贺卡' },
     ]),
   },
   {
@@ -139,6 +163,9 @@ export const THEMES = [
       { id: 'ball', en: 'ball', zh: '皮球' },
       { id: 'fish_tank', en: 'fish tank', zh: '鱼缸' },
       { id: 'pet_house', en: 'pet house', zh: '小窝' },
+      { id: 'hamster', en: 'hamster', zh: '仓鼠' },
+      { id: 'turtle', en: 'turtle', zh: '乌龟' },
+      { id: 'leash', en: 'leash', zh: '牵引绳' },
     ]),
   },
   {
@@ -154,6 +181,9 @@ export const THEMES = [
       { id: 'telescope', en: 'telescope', zh: '望远镜' },
       { id: 'saturn', en: 'saturn', zh: '土星' },
       { id: 'ufo', en: 'ufo', zh: '飞碟' },
+      { id: 'comet', en: 'comet', zh: '彗星' },
+      { id: 'space_station', en: 'space station', zh: '空间站' },
+      { id: 'robot', en: 'robot', zh: '机器人' },
     ]),
   },
 ];
@@ -169,7 +199,7 @@ for (const t of THEMES) {
   }
 }
 export const ALL_WORDS = [..._map.values()];
-export const TOTAL_WORDS = ALL_WORDS.length; // 83
+export const TOTAL_WORDS = ALL_WORDS.length; // 112
 
 export function wordOf(id) {
   return _map.get(id) || { id, en: id, zh: '' };

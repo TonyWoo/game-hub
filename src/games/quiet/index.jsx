@@ -16,6 +16,7 @@ const Sticker = ({ id, size = 56 }) => {
 };
 
 // ---------- 每主题场景装饰（简单 SVG 形） ----------
+// 贴纸尺寸已整体放大约 1.5 倍（场景 81px / 贴纸栏 78px / 测验 96px / 单词本 60px）
 function Decor({ themeId }) {
   switch (themeId) {
     case 'bedroom':
@@ -96,7 +97,7 @@ function WordBook({ collected, onBack }) {
               className={`q-word${got ? ' got' : ''}`}
               onClick={() => { if (got) speak(w.en); }}
             >
-              <span className="q-word-sticker">{got ? <Sticker id={w.id} size={40} /> : '❔'}</span>
+              <span className="q-word-sticker">{got ? <Sticker id={w.id} size={60} /> : '❔'}</span>
               <span className="q-word-en">{w.en}</span>
               <span className="q-word-zh">{w.zh}</span>
             </button>
@@ -250,7 +251,7 @@ function PlayScreen({ theme, save, commit, onBack, onQuiz }) {
             style={{ left: p.x + '%', top: p.y + '%' }}
             onPointerDown={(e) => startDrag(e, { id: p.id, fromTray: false, idx: i })}
           >
-            <Sticker id={p.id} size={54} />
+            <Sticker id={p.id} size={81} />
           </span>
         ))}
         {bubble && bubbleWord && bubblePos && (
@@ -276,7 +277,7 @@ function PlayScreen({ theme, save, commit, onBack, onQuiz }) {
               className="q-tray-item"
               onPointerDown={(e) => startDrag(e, { id: it.id, fromTray: true })}
             >
-              <Sticker id={it.id} size={52} />
+              <Sticker id={it.id} size={78} />
             </span>
           ))}
         </div>
@@ -287,7 +288,7 @@ function PlayScreen({ theme, save, commit, onBack, onQuiz }) {
 
       {drag && (
         <span className="q-ghost" style={{ left: drag.x, top: drag.y }}>
-          <Sticker id={drag.id} size={60} />
+          <Sticker id={drag.id} size={90} />
         </span>
       )}
     </div>
@@ -390,7 +391,7 @@ function QuizScreen({ theme, save, commit, onBack }) {
                 className={`q-quiz-opt${wrongId === it.id ? ' wrong' : ''}${goodId === it.id ? ' good' : ''}`}
                 onClick={() => pick(it)}
               >
-                <Sticker id={it.id} size={64} />
+                <Sticker id={it.id} size={96} />
               </button>
             ))}
           </div>

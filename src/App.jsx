@@ -6,6 +6,7 @@ import { useState } from 'react';
 import PetGame from './games/pet/App.jsx';
 import SurvivorGame from './games/survivor/App.jsx';
 import QuietBook from './games/quiet/index.jsx';
+import BackHomeButton from './BackHomeButton.jsx';
 
 const GAMES = [
   {
@@ -24,7 +25,7 @@ const GAMES = [
     id: 'quiet',
     icon: '📖',
     name: '安静书',
-    desc: '贴纸场景小世界，玩着学会 90 个英文单词',
+    desc: '贴纸场景小世界，玩着学会 110 个英文单词',
   },
 ];
 
@@ -57,9 +58,7 @@ export default function App() {
   const dark = route === 'survivor';
   return (
     <div className={`game-page${dark ? ' dark' : ''}`}>
-      <button className="back-btn" onClick={() => setRoute('hub')}>
-        ← 回大厅
-      </button>
+      <BackHomeButton onBack={() => setRoute('hub')} dark={dark} />
       {route === 'pet' && (
         <div className="game-pet">
           <PetGame />
