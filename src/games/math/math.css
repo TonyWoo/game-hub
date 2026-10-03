@@ -67,6 +67,33 @@
   box-shadow: 0 3px 10px rgba(190, 120, 60, .12);
   z-index: 5;
 }
+/* v2：观察提示 / 成长型思维提示 / 重播 */
+.mth-watch {
+  margin: 8px 14px 0; padding: 8px;
+  text-align: center; font-size: 14px; font-weight: 700; color: #b97c1a;
+  background: #fff7e6; border-radius: 12px; z-index: 5;
+  animation: mth-pulse 1.2s infinite;
+}
+@keyframes mth-pulse { 50% { opacity: .65; } }
+.mth-hint {
+  margin: 6px 14px 0; padding: 10px 12px;
+  background: #e8f4ff; border-radius: 12px;
+  font-size: 14px; font-weight: 700; color: #2b6cb0;
+  text-align: center; z-index: 5;
+  animation: mth-pop .25s;
+}
+.mth-tapzone {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  padding: 10px 14px 20px; z-index: 5;
+}
+.mth-tap-hint { font-size: 16px; font-weight: 800; color: #b97c1a; }
+.mth-replay-row { display: flex; justify-content: center; padding: 0 14px 16px; z-index: 5; }
+.mth-replay {
+  border: none; background: #e8f4ff; color: #2b6cb0;
+  border-radius: 12px; padding: 8px 16px;
+  font-size: 14px; font-weight: 800; cursor: pointer;
+}
+.mth-replay:active { transform: scale(.95); }
 .mth-opts {
   display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
   padding: 6px 14px 18px; z-index: 5;

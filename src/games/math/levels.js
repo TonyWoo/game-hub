@@ -1,7 +1,10 @@
 // ============================================================
-// levels.js —— 二年级数学 10 关出题引擎
-// 每关 gen() 生成 8 道题：{ text, options[4], answer, prop }
-// 答案全部由程序验算得出；干扰项为常见误算（差1、数位颠倒、运算顺序错）
+// levels.js —— 数学乐园 v2 出题引擎（视觉理解版）
+// 核心理念：每一题的 3D 场景本身就是题目。
+// 每题 = { text(辅助文字), options[4], answer, visual:{kind, ...params}, isTap }
+// visual kinds: merge / takeaway / array / distribute / mixedStack /
+//   ruler / clockFace / balance / anglePick / story / dotFlash
+// 答案全部由程序验算得出；干扰项为常见误算
 // ============================================================
 
 function ri(a, b) {
@@ -23,7 +26,7 @@ function swapDigits(n) {
 }
 
 // 组装 4 选 1：答案 + 干扰项候选，去重、补齐、打乱
-function mkQ(text, answer, cands, prop) {
+function mkQ(text, answer, cands, visual, isTap = false) {
   const seen = new Set([answer]);
   const opts = [answer];
   for (const c of shuffle(cands)) {
@@ -36,115 +39,137 @@ function mkQ(text, answer, cands, prop) {
     if (!seen.has(v)) { seen.add(v); opts.push(v); }
     k++;
   }
-  return { text, options: shuffle(opts), answer, prop };
+  return { text, options: shuffle(opts), answer, visual, isTap };
 }
 
-// ---------- 第 1 关：水果加法乐园（100 以内加法） ----------
+// ---------- 第 1 关：水果加法乐园（两堆合并，十格篮 = 10） ----------
+// 3D 里：左边 t1 篮 + s1 个、右边 t2 篮 + s2 个，飞到一起合并；满十自动装成新的一篮
 function genAdd() {
   const qs = [];
   for (let i = 0; i < 8; i++) {
-    const a = ri(12, 88);
-    const b = ri(6, 100 - a);
+    const t1 = ri(1, 6), s1 = ri(1, 9);
+    const t2 = ri(1, 6), s2 = ri(1, 9);
+    const a = t1 * 10 + s1, b = t2 * 10 + s2;
+    if (a + b > 100) { i--; continue; }
     const ans = a + b;
-    qs.push(mkQ(`${a} + ${b} = ?`, ans,
+    qs.push(mkQ('两堆水果合起来是几个？', ans,
       [ans + 1, ans - 1, ans + 10, ans - 10, ans + 2, ans - 2, swapDigits(ans)],
-      { kind: 'fruits', a, b }));
+      { kind: 'merge', a, b }));
   }
   return qs;
 }
 
-// ---------- 第 2 关：小火车减法（100 以内减法） ----------
+// ---------- 第 2 关：小火车减法（一节车厢 = 10 个苹果） ----------
+// 3D 里：火车拉着 T 节车厢（每节 10 个苹果）+ 尾车散果，bW 节脱钩开走、bS 个散果跳下
 function genSub() {
   const qs = [];
   for (let i = 0; i < 8; i++) {
-    const a = ri(25, 100);
-    const b = ri(8, a - 3);
+    const T = ri(2, 6), s = ri(0, 9);
+    const a = T * 10 + s;
+    const bW = ri(1, T);
+    const bS = ri(0, Math.min(9, s));
+    const b = bW * 10 + bS;
+    if (b > a - 5) { i--; continue; }
     const ans = a - b;
-    qs.push(mkQ(`${a} − ${b} = ?`, ans,
+    qs.push(mkQ('苹果被运走了一些，还剩几个苹果？', ans,
       [ans + 1, ans - 1, ans + 10, ans - 10, ans + 2, ans - 2, swapDigits(ans)],
-      { kind: 'train', a, b }));
+      { kind: 'takeaway', a, bW, bS }));
   }
   return qs;
 }
 
-// ---------- 第 3 关：乘法花园（表内乘法） ----------
+// ---------- 第 3 关：乘法花园（R 行 × C 列花阵） ----------
+// 3D 里：花朵排成方阵，逐行亮起；乘法 = 每份数 × 份数
 function genMul() {
   const qs = [];
   for (let i = 0; i < 8; i++) {
-    const m = ri(2, 9);
-    const n = ri(2, 9);
-    const ans = m * n;
-    qs.push(mkQ(`${m} × ${n} = ?`, ans,
-      [m + n, m * (n + 1), (m + 1) * n, m * (n - 1), ans + 1, ans - 1, ans + m, ans - m],
-      { kind: 'flowers', m, n }));
+    const r = ri(2, 9), c = ri(2, 9);
+    const ans = r * c;
+    qs.push(mkQ(`一行 ${c} 朵，${r} 行一共几朵？`, ans,
+      [r + c, r * (c + 1), (r + 1) * c, r * (c - 1), ans + r, ans - r, ans + 1, ans - 1],
+      { kind: 'array', r, c }));
   }
   return qs;
 }
 
-// ---------- 第 4 关：分饼干（表内除法） ----------
+// ---------- 第 4 关：分饼干（平均分动画） ----------
+// 3D 里：饼干一块一块自动飞进盘子；除法 = 平均分
 function genDiv() {
   const qs = [];
   for (let i = 0; i < 8; i++) {
-    const p = ri(2, 6);    // 人数（盘子数）
-    const per = ri(2, 9);  // 每人几块
+    const p = ri(2, 6);
+    const per = ri(2, 9);
     const total = p * per;
-    qs.push(mkQ(`${total} 块饼干，平均分给 ${p} 个小朋友，每人几块？`, per,
+    qs.push(mkQ('饼干分完了，每个盘子几块？', per,
       [per + 1, per - 1, p, per + 2, total, p + per],
-      { kind: 'cookies', total, plates: p, per }));
+      { kind: 'distribute', total, plates: p, per }));
   }
   return qs;
 }
 
-// ---------- 第 5 关：混合运算挑战营（两步计算） ----------
+// ---------- 第 5 关：混合运算挑战营（光圈 = 先算的部分） ----------
+// 3D 里：乘法部分被光圈圈起高亮，再添/拿走几块；先乘后加看得见
 function genMix() {
-  const qs = [];
-  const pats = [
-    () => { const a = ri(2, 9), b = ri(2, 9), c = ri(2, 9); return [`${a} + ${b} × ${c} = ?`, a + b * c, (a + b) * c]; },
-    () => { const a = ri(2, 9), b = ri(2, 9), c = ri(1, 9); return [`${a} × ${b} + ${c} = ?`, a * b + c, a * (b + c)]; },
-    () => { const a = ri(3, 9), b = ri(2, 9), c = ri(1, Math.max(1, a * b - 2)); return [`${a} × ${b} − ${c} = ?`, a * b - c, a * b + c]; },
-    () => { const a = ri(12, 60), b = ri(5, 30), c = ri(5, 30); return [`${a} − ${b} + ${c} = ?`, a - b + c, a - (b + c)]; },
-    () => { const a = ri(2, 5), b = ri(2, 5), c = ri(2, 5); return [`${a} × ${b} × ${c} = ?`, a * b * c, a * b + c]; },
-  ];
-  for (let i = 0; i < 8; i++) {
-    const [text, ans, mistake] = pick1(pats)();
-    qs.push(mkQ(text, ans,
-      [mistake, ans + 1, ans - 1, ans + 10, ans - 10, ans + 2],
-      { kind: 'blocks', n: ans }));
-  }
-  return qs;
-}
-
-// ---------- 第 6 关：尺子王国（米和厘米） ----------
-function genLen() {
   const qs = [];
   for (let i = 0; i < 8; i++) {
     const t = i % 3;
-    if (t === 0) {
-      const m = ri(1, 9);
-      qs.push(mkQ(`${m} 米 = ( ) 厘米`, m * 100,
-        [m * 10, m * 100 + 10, m * 100 - 10, m * 1000, m * 100 + 100],
-        { kind: 'ruler' }));
-    } else if (t === 1) {
-      const cm = ri(1, 9) * 100;
-      qs.push(mkQ(`${cm} 厘米 = ( ) 米`, cm / 100,
-        [cm / 10, cm / 100 + 1, cm / 100 - 1, cm / 100 + 2],
-        { kind: 'ruler' }));
+    let a, b, c, ans, op;
+    if (t === 0) {           // a 组 × b 块，再添 c 块
+      a = ri(2, 5); b = ri(2, 5); c = ri(2, 9);
+      ans = a * b + c; op = 'mulAdd';
+    } else if (t === 1) {    // a 组 × b 块，拿走 c 块
+      a = ri(2, 5); b = ri(2, 5); c = ri(1, a * b - 3);
+      ans = a * b - c; op = 'mulSub';
+    } else {                 // a 块 + b 组 × c 块
+      a = ri(2, 9); b = ri(2, 4); c = ri(2, 5);
+      ans = a + b * c; op = 'addMul';
+    }
+    qs.push(mkQ('一共几块积木？', ans,
+      [ans + 1, ans - 1, ans + 10, ans - 10, ans + 2, ans - 2],
+      { kind: 'mixedStack', a, b, c, op }));
+  }
+  return qs;
+}
+
+// ---------- 第 6 关：尺子王国（彩带铺在尺子上比） ----------
+function genLen() {
+  const qs = [];
+  for (let i = 0; i < 8; i++) {
+    const t = i % 5;
+    if (t === 0) {                       // 比长短：3D 里直接看
+      let L1 = ri(25, 85), L2 = ri(25, 85);
+      if (Math.abs(L1 - L2) < 12) { i--; continue; }
+      const ans = L1 > L2 ? '红彩带长' : '蓝彩带长';
+      qs.push(mkQ('哪条彩带长？', ans,
+        ['红彩带长', '蓝彩带长', '一样长', '看不出来'].filter((x) => x !== ans),
+        { kind: 'ruler', sub: 'which', L1, L2 }));
+    } else if (t === 1) {                // 差多少：看尺子读数
+      let L1 = ri(30, 90), L2 = ri(20, 80);
+      if (Math.abs(L1 - L2) < 10) { i--; continue; }
+      const ans = Math.abs(L1 - L2);
+      qs.push(mkQ('红彩带比蓝彩带长几厘米？', ans,
+        [ans + 1, ans - 1, ans + 10, ans - 10, ans + 5],
+        { kind: 'ruler', sub: 'diff', L1, L2 }));
+    } else if (t === 2) {                // 1 米 = 100 厘米：1 条大蓝条 vs 10 条橙条
+      qs.push(mkQ('1 米 = ( ) 厘米', 100,
+        [10, 1000, 90, 110, 101],
+        { kind: 'ruler', sub: 'm2cm1' }));
+    } else if (t === 3) {
+      const X = ri(2, 5);
+      qs.push(mkQ(`${X} 米 = ( ) 厘米`, X * 100,
+        [X * 10, X * 100 + 10, X * 100 - 10, X * 1000],
+        { kind: 'ruler', sub: 'm2cmX', X }));
     } else {
-      const m = ri(1, 3);
-      const cm = ri(1, 9) * 10 + ri(0, 9); // 10~99，保证 < m*100
-      const mCm = m * 100;
-      const text = `${m} 米和 ${cm} 厘米，哪个长？`;
-      let ans, cands;
-      if (mCm > cm) { ans = `${m}米长`; cands = [`${cm}厘米长`, '一样长', '比不出来']; }
-      else if (mCm < cm) { ans = `${cm}厘米长`; cands = [`${m}米长`, '一样长', '比不出来']; }
-      else { ans = '一样长'; cands = [`${m}米长`, `${cm}厘米长`, '比不出来']; }
-      qs.push(mkQ(text, ans, cands, { kind: 'ruler' }));
+      const X = ri(2, 9);
+      qs.push(mkQ(`${X * 100} 厘米 = ( ) 米`, X,
+        [X * 10, X + 1, X - 1, X + 2],
+        { kind: 'ruler', sub: 'cm2m', X }));
     }
   }
   return qs;
 }
 
-// ---------- 第 7 关：时间小达人（认钟表：整时、半时） ----------
+// ---------- 第 7 关：时间小达人（大钟表就是题目） ----------
 function genTime() {
   const qs = [];
   for (let i = 0; i < 8; i++) {
@@ -160,98 +185,120 @@ function genTime() {
       ans = `${h}点`;
       cands = [`${h}点半`, `${h2}点`, `${hm}点`, `${h2}点半`];
     }
-    qs.push(mkQ('钟表上是几点？', ans, cands, { kind: 'clock', h, m: half ? 30 : 0 }));
+    qs.push(mkQ('钟表上是几点？', ans, cands,
+      { kind: 'clockFace', h, m: half ? 30 : 0 }));
   }
   return qs;
 }
 
-// ---------- 第 8 关：天平称一称（克和千克） ----------
+// ---------- 第 8 关：天平称一称 ----------
 function genWeight() {
   const qs = [];
   for (let i = 0; i < 8; i++) {
-    if (i === 3) {
+    const t = i % 4;
+    if (t === 0) {                       // 看天平哪边下沉
+      let wL = ri(2, 9), wR = ri(2, 9);
+      if (wL === wR) { i--; continue; }
+      const ans = wL > wR ? '左边重' : '右边重';
+      qs.push(mkQ('哪边重？', ans,
+        ['左边重', '右边重', '一样重', '看不出来'].filter((x) => x !== ans),
+        { kind: 'balance', sub: 'which', wL, wR }));
+    } else if (t === 1) {                // 1 千克 = 10 个 100 克，天平是平的
+      qs.push(mkQ('1 千克 = ( ) 克（右边每个小砝码是 100 克）', 1000,
+        [100, 10000, 900, 1100, 1010],
+        { kind: 'balance', sub: 'kg2g1' }));
+    } else if (t === 2) {
+      const X = ri(2, 5);
+      qs.push(mkQ(`${X} 千克 = ( ) 克（右边每个小砝码是 100 克）`, X * 1000,
+        [X * 100, X * 1000 + 100, X * 1000 - 100, X * 10000],
+        { kind: 'balance', sub: 'kg2gX', X }));
+    } else {                             // 经典：1 千克棉花 vs 1 千克铁
       qs.push(mkQ('1 千克棉花和 1 千克铁，哪个重？', '一样重',
-        ['棉花重', '铁重', '分不出来'], { kind: 'scale', tilt: 0 }));
-      continue;
-    }
-    if (i % 2 === 0) {
-      const kg = ri(1, 9);
-      qs.push(mkQ(`${kg} 千克 = ( ) 克`, kg * 1000,
-        [kg * 100, kg * 1000 + 100, kg * 1000 - 100, kg * 10000],
-        { kind: 'scale', tilt: 0 }));
-    } else {
-      const g = ri(1, 9) * 1000;
-      qs.push(mkQ(`${g} 克 = ( ) 千克`, g / 1000,
-        [g / 100, g / 1000 + 1, g / 1000 - 1, g / 1000 + 2],
-        { kind: 'scale', tilt: 0 }));
+        ['棉花重', '铁重', '看不出来'],
+        { kind: 'balance', sub: 'trick' }));
     }
   }
   return qs;
 }
 
-// ---------- 第 9 关：角的乐园（认直角 / 锐角 / 钝角） ----------
+// ---------- 第 9 关：角的乐园（直接点 3D 模型作答） ----------
 function genAngle() {
   const qs = [];
-  const names = { right: '直角', acute: '锐角', obtuse: '钝角' };
+  const NAMES = { right: '直角', acute: '锐角', obtuse: '钝角' };
+  const types = ['right', 'acute', 'obtuse', 'biggest', 'smallest', 'right', 'obtuse', 'acute'];
   for (let i = 0; i < 8; i++) {
-    const kind = i % 3;
-    if (kind === 0) {
-      const target = pick1(['right', 'acute', 'obtuse']);
-      const order = shuffle(['acute', 'right', 'obtuse']);
-      const ans = `第${order.indexOf(target) + 1}个`;
-      qs.push(mkQ(`哪个是${names[target]}？`, ans,
-        ['第1个', '第2个', '第3个', '一样大'].filter((x) => x !== ans),
-        { kind: 'angles', order }));
-    } else if (kind === 1) {
-      const order = shuffle(['acute', 'right', 'obtuse']);
-      const ans = `第${order.indexOf('obtuse') + 1}个`;
-      qs.push(mkQ('哪个角最大？', ans,
-        ['第1个', '第2个', '第3个', '一样大'].filter((x) => x !== ans),
-        { kind: 'angles', order }));
-    } else {
-      const k = ri(0, 3);
-      const base = [];
-      for (let j = 0; j < 3; j++) base.push(j < k ? 'right' : pick1(['acute', 'obtuse']));
-      const order = shuffle(base);
-      const ans = `${k}个`;
-      qs.push(mkQ('下图中有几个直角？', ans,
-        ['0个', '1个', '2个', '3个'].filter((x) => x !== ans),
-        { kind: 'angles', order }));
+    const t = types[i];
+    const order = shuffle(['acute', 'right', 'obtuse']);
+    let targetIdx, text;
+    if (t === 'biggest') { targetIdx = order.indexOf('obtuse'); text = '哪个角最大？点一点'; }
+    else if (t === 'smallest') { targetIdx = order.indexOf('acute'); text = '哪个角最小？点一点'; }
+    else { targetIdx = order.indexOf(t); text = `哪个是${NAMES[t]}？点一点`; }
+    qs.push({ text, options: [], answer: targetIdx, isTap: true, visual: { kind: 'anglePick', order, target: targetIdx } });
+  }
+  return qs;
+}
+
+// ---------- 第 10 关：数学小博士（应用题 + 可数的 3D 情景） ----------
+function genWord() {
+  const qs = [];
+  for (let i = 0; i < 8; i++) {
+    const t = i % 6;
+    if (t === 0) {          // n 盒 × m 块：3D 里真摆出来
+      const n = ri(2, 4), m = ri(3, 6);
+      qs.push(mkQ(`${n} 盒饼干，每盒 ${m} 块，一共多少块？`, n * m,
+        [n + m, n * m + 1, n * m - 1, n * m + n],
+        { kind: 'story', sub: 'cookieBox', n, m }));
+    } else if (t === 1) {   // m 排 × n 人：3D 里站好队
+      const m = ri(2, 4), n = ri(3, 6);
+      qs.push(mkQ(`每排站 ${n} 人，一共 ${m} 排，一共多少人？`, n * m,
+        [n + m, n * m + 1, n * m - 1, n * m - n],
+        { kind: 'story', sub: 'rows', m, n }));
+    } else if (t === 2) {   // 吃苹果：3D 里飞走一些
+      const a = ri(10, 20), b = ri(3, a - 5);
+      qs.push(mkQ('桌上的苹果被吃掉了一些，还剩几个？', a - b,
+        [a - b + 1, a - b - 1, a - b + 2, b],
+        { kind: 'story', sub: 'eatApple', a, b }));
+    } else if (t === 3) {   // 分糖：3D 里分完
+      const t2 = ri(2, 5), p = ri(2, 8);
+      qs.push(mkQ('糖果分完了，每个小朋友几颗？', p,
+        [p + 1, p - 1, t2, p + 2],
+        { kind: 'story', sub: 'shareCandy', t: t2, p }));
+    } else if (t === 4) {   // 还差几元：两摞硬币
+      const a = ri(15, 30), b = ri(5, a - 5);
+      qs.push(mkQ(`一本书 ${a} 元，小明有 ${b} 元，还差几元？`, a - b,
+        [a - b + 1, a - b - 1, a + b, a - b + 10],
+        { kind: 'story', sub: 'money', a, b }));
+    } else {                // 公园人数：3D 里走进来
+      const a = ri(8, 14), b = ri(5, 10);
+      qs.push(mkQ(`公园里有 ${a} 人，又来了 ${b} 人，现在一共几人？`, a + b,
+        [a + b + 1, a + b - 1, a + b + 10, Math.abs(a - b)],
+        { kind: 'story', sub: 'park', a, b }));
     }
   }
   return qs;
 }
 
-// ---------- 第 10 关：数学小博士（应用题） ----------
-function genWord() {
-  const qs = [];
-  const makers = [
-    () => { const n = ri(2, 5), m = ri(3, 9); return [`${n} 盒饼干，每盒 ${m} 块，一共多少块？`, n * m, [n + m, n * m + 1, n * m - 1, n * m + n]]; },
-    () => { const n = ri(2, 4), m = ri(4, 9); return [`每排坐 ${n} 人，一共 ${m} 排，能坐多少人？`, n * m, [n + m, n * m + 1, n * m - 1, n * m - n]]; },
-    () => { const a = ri(15, 50), b = ri(5, a - 5); return [`妈妈买了 ${a} 个苹果，吃了 ${b} 个，还剩几个？`, a - b, [a + b, a - b + 1, a - b - 1, a - b + 10]]; },
-    () => { const t = ri(2, 6), p = ri(2, 9); return [`${t * p} 颗糖，平均分给 ${t} 个小朋友，每人几颗？`, p, [p + 1, p - 1, t, t * p]]; },
-    () => { const a = ri(20, 60), b = ri(8, a - 8); return [`一本书 ${a} 元，小明有 ${b} 元，还差几元？`, a - b, [a + b, a - b + 1, a - b - 1, a - b + 10]]; },
-    () => { const a = ri(15, 70), b = ri(5, 99 - a); return [`公园里有 ${a} 人，又来了 ${b} 人，现在一共有几人？`, a + b, [a + b + 1, a + b - 1, a + b + 10, Math.abs(a - b)]]; },
-  ];
-  for (let i = 0; i < 8; i++) {
-    const [text, ans, cands] = pick1(makers)();
-    qs.push(mkQ(text, ans, cands, { kind: 'blackboard' }));
-  }
-  return qs;
+// ---------- 点卡快闪（每关开场热身，3 张，不计星级） ----------
+// 经典点阵：5 梅花 / 6 双排 / 7 / 8 / 9 九宫 / 10 双排
+export function genDots() {
+  return shuffle([5, 6, 7, 8, 9, 10]).slice(0, 3).map((count) => {
+    const cands = [count + 1, count - 1, count + 2, count - 2].filter((v) => v > 0);
+    return mkQ('', count, cands, { kind: 'dotFlash', count });
+  });
 }
 
 // ---------- 关卡表 ----------
 export const LEVELS = [
-  { id: 'add', name: '水果加法乐园', icon: '🍎', desc: '100 以内加法', gen: genAdd },
-  { id: 'sub', name: '小火车减法', icon: '🚂', desc: '100 以内减法', gen: genSub },
-  { id: 'mul', name: '乘法花园', icon: '🌸', desc: '表内乘法', gen: genMul },
-  { id: 'div', name: '分饼干', icon: '🍪', desc: '表内除法', gen: genDiv },
-  { id: 'mix', name: '混合运算挑战营', icon: '🧮', desc: '两步计算', gen: genMix },
-  { id: 'len', name: '尺子王国', icon: '📏', desc: '米和厘米', gen: genLen },
+  { id: 'add', name: '水果加法乐园', icon: '🍎', desc: '看合并，学加法', gen: genAdd },
+  { id: 'sub', name: '小火车减法', icon: '🚂', desc: '看拿走，学减法', gen: genSub },
+  { id: 'mul', name: '乘法花园', icon: '🌸', desc: '花阵里看乘法', gen: genMul },
+  { id: 'div', name: '分饼干', icon: '🍪', desc: '看平均分，学除法', gen: genDiv },
+  { id: 'mix', name: '混合运算挑战营', icon: '🧮', desc: '光圈里先算', gen: genMix },
+  { id: 'len', name: '尺子王国', icon: '📏', desc: '彩带比长短', gen: genLen },
   { id: 'time', name: '时间小达人', icon: '🕐', desc: '认钟表', gen: genTime },
-  { id: 'weight', name: '天平称一称', icon: '⚖️', desc: '克和千克', gen: genWeight },
-  { id: 'angle', name: '角的乐园', icon: '📐', desc: '认直角锐角钝角', gen: genAngle },
-  { id: 'word', name: '数学小博士', icon: '🎓', desc: '应用题大闯关', gen: genWord },
+  { id: 'weight', name: '天平称一称', icon: '⚖️', desc: '看天平学轻重', gen: genWeight },
+  { id: 'angle', name: '角的乐园', icon: '📐', desc: '点一点认角', gen: genAngle },
+  { id: 'word', name: '数学小博士', icon: '🎓', desc: '数着 3D 解应用题', gen: genWord },
 ];
 
 export const Q_PER_LEVEL = 8;
