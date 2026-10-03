@@ -1,0 +1,210 @@
+/* ============================================================
+   quiet.css —— 安静书：马卡龙可爱风
+   全部选择器限定在 .game-quiet 内；keyframes 统一 q- 前缀
+   ============================================================ */
+.game-quiet {
+  --qpink: #ff8fb3;
+  --qpink-deep: #ff6b9d;
+  --qpink-soft: #ffd6e7;
+  --qmint: #7ed6a5;
+  --qink: #6b5b6e;
+  --qink-soft: #a08fa3;
+  --qyellow: #ffd93d;
+  --qradius: 22px;
+  min-height: 100vh;
+  background: linear-gradient(160deg, #fff5f8 0%, #fffafc 45%, #eefbf4 100%);
+  color: var(--qink);
+  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.game-quiet * { box-sizing: border-box; }
+
+.game-quiet .q-root {
+  max-width: 720px;
+  margin: 0 auto;
+  min-height: 100vh;
+  padding: 12px 14px 40px;
+  animation: q-fadeIn 0.35s ease;
+}
+@keyframes q-fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; } }
+
+.game-quiet .q-title {
+  text-align: center; color: var(--qpink-deep);
+  font-size: 30px; margin: 16px 0 4px; letter-spacing: 2px;
+  text-shadow: 0 2px 0 #fff;
+}
+.game-quiet .q-sub { text-align: center; color: var(--qink-soft); margin: 0 0 14px; font-size: 15px; }
+.game-quiet .q-sub b { color: var(--qpink-deep); }
+
+/* ---------- 通用按钮 ---------- */
+.game-quiet .q-btn {
+  border: none; border-radius: 999px;
+  padding: 10px 20px; font-size: 15px; font-weight: 700;
+  font-family: inherit; cursor: pointer; color: var(--qink);
+  background: #fff; border: 2px solid var(--qpink-soft);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.06);
+  transition: transform 0.12s ease;
+  white-space: nowrap;
+}
+.game-quiet .q-btn:active { transform: scale(0.95); }
+.game-quiet .q-btn-primary {
+  background: linear-gradient(135deg, var(--qpink), var(--qpink-deep));
+  color: #fff; border: none;
+  box-shadow: 0 6px 18px rgba(255, 143, 179, 0.35);
+  font-size: 17px; padding: 13px 34px;
+}
+.game-quiet .q-btn-words { display: block; margin: 0 auto 18px; }
+.game-quiet .q-btn-quiz { border-color: var(--qyellow); }
+.game-quiet .q-btn-clear { display: block; margin: 10px auto 0; font-size: 13px; padding: 8px 16px; }
+
+/* ---------- 顶栏 ---------- */
+.game-quiet .q-bar {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 12px;
+}
+.game-quiet .q-bar-title {
+  flex: 1; margin: 0; font-size: 19px; color: var(--qpink-deep);
+  text-align: center;
+}
+.game-quiet .q-bar-en { font-size: 13px; color: var(--qink-soft); font-weight: 400; }
+.game-quiet .q-count { color: var(--qink-soft); font-size: 15px; }
+.game-quiet .q-stars { font-size: 17px; font-weight: 800; color: #e8933c; }
+
+/* ---------- 主题选择 ---------- */
+.game-quiet .q-theme-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+}
+.game-quiet .q-theme-card {
+  background: #fff; border: 3px solid var(--qpink-soft);
+  border-radius: var(--qradius); padding: 16px 10px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  cursor: pointer; font-family: inherit; color: inherit;
+  box-shadow: 0 4px 12px rgba(255, 143, 179, 0.12);
+  transition: transform 0.12s ease;
+  position: relative;
+}
+.game-quiet .q-theme-card:not(.locked):active { transform: scale(0.96); }
+.game-quiet .q-theme-card.locked { opacity: 0.75; filter: grayscale(0.5); cursor: default; }
+.game-quiet .q-theme-emoji { font-size: 44px; }
+.game-quiet .q-theme-zh { font-size: 17px; font-weight: 800; color: var(--qink); }
+.game-quiet .q-theme-en { font-size: 13px; color: var(--qink-soft); }
+.game-quiet .q-lock-tip {
+  font-size: 12px; color: #fff; background: var(--qink-soft);
+  border-radius: 999px; padding: 3px 10px; margin-top: 4px;
+}
+
+/* ---------- 场景 ---------- */
+.game-quiet .q-scene {
+  position: relative; width: 100%;
+  aspect-ratio: 4 / 3; max-height: 52vh;
+  border-radius: var(--qradius); overflow: hidden;
+  border: 3px solid #fff;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  touch-action: none;
+}
+.game-quiet .q-decor { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.game-quiet .q-scene-hint {
+  position: absolute; inset: 0; display: flex;
+  align-items: center; justify-content: center;
+  color: var(--qink-soft); font-size: 15px; pointer-events: none;
+}
+.game-quiet .q-placed {
+  position: absolute; transform: translate(-50%, -50%);
+  cursor: grab; touch-action: none;
+  filter: drop-shadow(0 3px 4px rgba(0,0,0,0.15));
+  animation: q-pop 0.25s ease;
+}
+@keyframes q-pop { from { transform: translate(-50%,-50%) scale(0.4); } to { transform: translate(-50%,-50%) scale(1); } }
+.game-quiet .q-sticker-svg { display: inline-block; }
+.game-quiet .q-sticker-svg svg { width: 100%; height: 100%; display: block; }
+
+/* 单词气泡 */
+.game-quiet .q-bubble {
+  position: absolute; transform: translate(-50%, -115%);
+  background: #fff; border-radius: 16px;
+  border: 2px solid var(--qpink-soft);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+  padding: 10px 16px; text-align: center; z-index: 20;
+  animation: q-pop 0.2s ease; min-width: 110px;
+}
+.game-quiet .q-bubble-en { font-size: 22px; font-weight: 800; color: var(--qpink-deep); }
+.game-quiet .q-bubble-zh { font-size: 15px; color: var(--qink); margin: 2px 0 6px; }
+.game-quiet .q-bubble-row { display: flex; gap: 8px; justify-content: center; }
+.game-quiet .q-mini {
+  border: 2px solid var(--qpink-soft); background: #fff;
+  border-radius: 12px; font-size: 16px; padding: 4px 10px;
+  cursor: pointer; font-family: inherit;
+}
+.game-quiet .q-mini:active { transform: scale(0.92); }
+
+/* ---------- 贴纸栏 ---------- */
+.game-quiet .q-tray-wrap { margin-top: 12px; }
+.game-quiet .q-tray {
+  display: flex; gap: 10px; overflow-x: auto;
+  background: rgba(255,255,255,0.75);
+  border: 2px solid var(--qpink-soft); border-radius: var(--qradius);
+  padding: 12px;
+}
+.game-quiet .q-tray-item {
+  flex: none; width: 68px; height: 68px;
+  background: #fff; border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid #f3ecf7; cursor: grab; touch-action: none;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+.game-quiet .q-tray-item:active { cursor: grabbing; transform: scale(1.06); }
+
+/* 拖拽幽灵 */
+.game-quiet .q-ghost {
+  position: fixed; transform: translate(-50%, -50%);
+  pointer-events: none; z-index: 9999; opacity: 0.85;
+  filter: drop-shadow(0 6px 8px rgba(0,0,0,0.2));
+}
+
+/* ---------- 找一找 ---------- */
+.game-quiet .q-quiz-ask { text-align: center; margin: 8px 0 16px; }
+.game-quiet .q-quiz-ask p { margin: 6px 0; color: var(--qink); font-size: 16px; }
+.game-quiet .q-quiz-zh { color: var(--qink-soft); font-size: 14px; }
+.game-quiet .q-replay {
+  font-size: 44px; background: #fff; border: 3px solid var(--qyellow);
+  border-radius: 50%; width: 84px; height: 84px; cursor: pointer;
+  box-shadow: 0 4px 12px rgba(255, 217, 61, 0.4);
+  font-family: inherit;
+}
+.game-quiet .q-replay:active { transform: scale(0.93); }
+.game-quiet .q-quiz-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+}
+.game-quiet .q-quiz-opt {
+  background: #fff; border: 3px solid var(--qpink-soft);
+  border-radius: var(--qradius); padding: 18px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-family: inherit;
+  transition: transform 0.12s ease, border-color 0.12s ease;
+}
+.game-quiet .q-quiz-opt:active { transform: scale(0.96); }
+.game-quiet .q-quiz-opt.wrong { animation: q-shake 0.4s ease; border-color: #ffb3b3; }
+@keyframes q-shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+.game-quiet .q-quiz-opt.good { border-color: var(--qmint); background: #f0fbf5; animation: q-pop2 0.4s ease; }
+@keyframes q-pop2 { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+.game-quiet .q-quiz-done { text-align: center; padding: 30px 0; }
+.game-quiet .q-done-stars { font-size: 52px; margin-bottom: 10px; letter-spacing: 4px; }
+.game-quiet .q-quiz-done h2 { color: var(--qpink-deep); margin: 0 0 8px; }
+
+/* ---------- 单词本 ---------- */
+.game-quiet .q-word-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+}
+.game-quiet .q-word {
+  background: #fff; border: 2px solid #f3ecf7; border-radius: 16px;
+  padding: 10px 6px; display: flex; flex-direction: column;
+  align-items: center; gap: 2px; cursor: pointer;
+  font-family: inherit; color: inherit; opacity: 0.55;
+}
+.game-quiet .q-word.got { opacity: 1; border-color: var(--qpink-soft); }
+.game-quiet .q-word:active { transform: scale(0.95); }
+.game-quiet .q-word-en { font-size: 14px; font-weight: 800; color: var(--qpink-deep); }
+.game-quiet .q-word-zh { font-size: 12px; color: var(--qink-soft); }
+.game-quiet .q-word-sticker { height: 40px; display: flex; align-items: center; }

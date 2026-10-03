@@ -1,0 +1,133 @@
+/* ============================================================
+   hub.css —— 游戏大厅：马卡龙可爱风（和宠物喂养乐园统一）
+   注意：所有选择器都以 .game-hub 开头，不污染各游戏
+   ============================================================ */
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  color: #6b5b6e;
+  background: linear-gradient(160deg, #fff5f8 0%, #fffafc 45%, #eefbf4 100%);
+}
+
+/* 大厅根容器 */
+.game-hub {
+  max-width: 720px;
+  margin: 0 auto;
+  min-height: 100vh;
+  padding: 20px 16px 48px;
+  animation: hubFadeIn 0.35s ease;
+}
+@keyframes hubFadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; } }
+
+.game-hub .hub-title {
+  text-align: center;
+  color: #ff6b9d;
+  font-size: 32px;
+  margin: 22px 0 4px;
+  letter-spacing: 2px;
+  text-shadow: 0 2px 0 #fff;
+}
+.game-hub .hub-sub {
+  text-align: center;
+  color: #a08fa3;
+  margin: 0 0 24px;
+  font-size: 15px;
+}
+
+.game-hub .hub-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.game-hub .hub-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #fff;
+  border-radius: 22px;
+  padding: 18px;
+  box-shadow: 0 6px 18px rgba(255, 143, 179, 0.18);
+  border: 3px solid #ffd6e7;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  text-align: left;
+  width: 100%;
+  font-family: inherit;
+  color: inherit;
+}
+.game-hub .hub-card:active { transform: scale(0.97); }
+.game-hub .hub-card .hub-icon {
+  font-size: 52px;
+  flex: none;
+  width: 76px;
+  height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff0f5;
+  border-radius: 18px;
+}
+.game-hub .hub-card .hub-info { flex: 1; }
+.game-hub .hub-card .hub-name {
+  font-size: 20px;
+  font-weight: 800;
+  color: #ff6b9d;
+  margin: 0 0 4px;
+}
+.game-hub .hub-card .hub-desc {
+  font-size: 14px;
+  color: #a08fa3;
+  margin: 0;
+  line-height: 1.5;
+}
+.game-hub .hub-card .hub-go {
+  flex: none;
+  background: linear-gradient(135deg, #ff8fb3 0%, #ff6b9d 100%);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 10px 20px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(255, 143, 179, 0.35);
+  white-space: nowrap;
+}
+
+/* 各游戏页：容器 + 回大厅按钮 */
+.game-page {
+  position: relative;
+  min-height: 100vh;
+}
+.back-btn {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 9999;
+  background: rgba(255, 255, 255, 0.92);
+  border: 2px solid #ffd6e7;
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #ff6b9d;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+}
+.back-btn:active { transform: scale(0.95); }
+/* 像素幸存者是暗色全屏，按钮配色适配 */
+.game-page.dark .back-btn {
+  background: rgba(20, 24, 38, 0.9);
+  border-color: #2a3350;
+  color: #9fb3d8;
+}

@@ -1,0 +1,80 @@
+// ============================================================
+// App.jsx —— game-hub 路由外壳（useState 极简路由）
+// 'hub' 大厅 | 'pet' 宠物喂养乐园 | 'survivor' 像素幸存者 | 'quiet' 安静书
+// ============================================================
+import { useState } from 'react';
+import PetGame from './games/pet/App.jsx';
+import SurvivorGame from './games/survivor/App.jsx';
+import QuietBook from './games/quiet/index.jsx';
+
+const GAMES = [
+  {
+    id: 'pet',
+    icon: '🐾',
+    name: '宠物喂养乐园',
+    desc: '养可爱宠物，边玩边学英语单词',
+  },
+  {
+    id: 'survivor',
+    icon: '⚔️',
+    name: '像素幸存者',
+    desc: '走位打怪升级，努力活过 10 分钟',
+  },
+  {
+    id: 'quiet',
+    icon: '📖',
+    name: '安静书',
+    desc: '贴纸场景小世界，玩着学会 90 个英文单词',
+  },
+];
+
+function Hub({ onPick }) {
+  return (
+    <div className="game-hub">
+      <h1 className="hub-title">🎮 我的游戏库</h1>
+      <p className="hub-sub">选一个，开始玩吧！</p>
+      <div className="hub-cards">
+        {GAMES.map((g) => (
+          <button key={g.id} className="hub-card" onClick={() => onPick(g.id)}>
+            <span className="hub-icon">{g.icon}</span>
+            <span className="hub-info">
+              <p className="hub-name">{g.name}</p>
+              <p className="hub-desc">{g.desc}</p>
+            </span>
+            <span className="hub-go">开始游戏 →</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default function App() {
+  const [route, setRoute] = useState('hub');
+
+  if (route === 'hub') return <Hub onPick={setRoute} />;
+
+  const dark = route === 'survivor';
+  return (
+    <div className={`game-page${dark ? ' dark' : ''}`}>
+      <button className="back-btn" onClick={() => setRoute('hub')}>
+        ← 回大厅
+      </button>
+      {route === 'pet' && (
+        <div className="game-pet">
+          <PetGame />
+        </div>
+      )}
+      {route === 'survivor' && (
+        <div className="game-survivor">
+          <SurvivorGame />
+        </div>
+      )}
+      {route === 'quiet' && (
+        <div className="game-quiet">
+          <QuietBook />
+        </div>
+      )}
+    </div>
+  );
+}

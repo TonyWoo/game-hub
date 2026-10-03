@@ -1,0 +1,372 @@
+/* 由 scope_css.py 自动生成：全部限定在 .game-pet 内，keyframes 加 pet- 前缀 */
+/* ============================================================
+   宠物喂养乐园 —— 马卡龙可爱风全局样式
+   粉 / 白 / 薄荷绿，圆角，大按钮，手机优先
+   ============================================================ */
+.game-pet {
+  --pink: #ff8fb3;
+  --pink-deep: #ff6b9d;
+  --pink-soft: #ffd6e7;
+  --pink-bg: #fff0f5;
+  --mint: #7ed6a5;
+  --mint-soft: #c9f2dd;
+  --cream: #fffafc;
+  --ink: #6b5b6e;
+  --ink-soft: #a08fa3;
+  --yellow: #ffd93d;
+  --radius: 22px;
+  --shadow: 0 6px 18px rgba(255, 143, 179, 0.25);
+}
+
+.game-pet * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+.game-pet {
+  margin: 0;
+  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  color: var(--ink);
+  background: linear-gradient(160deg, #fff5f8 0%, #fffafc 45%, #eefbf4 100%);
+  min-height: 100vh;
+}
+
+.game-pet .app {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  padding: 12px 14px 40px;
+}
+
+.game-pet .screen { animation: pet-fadeIn 0.35s ease; }
+@keyframes pet-fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; } }
+
+/* ---------- 标题 ---------- */
+.game-pet .game-title {
+  text-align: center;
+  color: var(--pink-deep);
+  font-size: 30px;
+  margin: 18px 0 4px;
+  letter-spacing: 2px;
+  text-shadow: 0 2px 0 #fff;
+}
+.game-pet .game-title.small { font-size: 20px; margin: 0; text-align: left; }
+.game-pet .subtitle { text-align: center; color: var(--ink-soft); margin: 0 0 16px; }
+
+/* ---------- 按钮 ---------- */
+.game-pet .btn {
+  border: none;
+  border-radius: 999px;
+  padding: 12px 26px;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  color: var(--ink);
+}
+.game-pet .btn:active { transform: scale(0.96); }
+.game-pet .btn-primary {
+  background: linear-gradient(135deg, var(--pink) 0%, var(--pink-deep) 100%);
+  color: #fff;
+  box-shadow: var(--shadow);
+}
+.game-pet .btn-ghost { background: #fff; border: 2px solid var(--pink-soft); box-shadow: 0 3px 8px rgba(0,0,0,0.05); }
+.game-pet .btn-big { font-size: 19px; padding: 15px 40px; display: block; margin: 18px auto 0; }
+.game-pet .btn-small { font-size: 13px; padding: 8px 16px; }
+.game-pet .btn:disabled { opacity: 0.45; filter: grayscale(0.4); cursor: default; }
+
+/* ---------- 领养页（6 只宠物换行排） ---------- */
+.game-pet .adopt-cards { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
+.game-pet .adopt-card {
+  flex: 1 1 28%;
+  background: #fff;
+  border: 3px solid transparent;
+  border-radius: var(--radius);
+  padding: 10px 6px 14px;
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+.game-pet .adopt-card:active { transform: scale(0.96); }
+.game-pet .adopt-card.selected { border-color: var(--pink-deep); box-shadow: var(--shadow); transform: translateY(-3px); }
+.game-pet .adopt-pet { width: 100%; height: auto; }
+.game-pet .adopt-name { font-weight: 800; font-size: 17px; margin-top: 4px; }
+.game-pet .adopt-desc { font-size: 12px; color: var(--ink-soft); margin: 4px 0; line-height: 1.5; min-height: 36px; }
+.game-pet .adopt-fav { font-size: 12px; background: var(--pink-bg); border-radius: 999px; padding: 3px 8px; display: inline-block; }
+
+.game-pet .name-row { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 6px; }
+.game-pet .name-row input {
+  border: 2px solid var(--pink-soft);
+  border-radius: 999px;
+  padding: 10px 18px;
+  font-size: 16px;
+  font-family: inherit;
+  color: var(--ink);
+  outline: none;
+  width: 190px;
+  background: #fff;
+}
+.game-pet .name-row input:focus { border-color: var(--pink); }
+
+/* ---------- 顶栏 ---------- */
+.game-pet .topbar { display: flex; align-items: center; justify-content: space-between; margin: 6px 0 10px; }
+
+/* ---------- 状态栏 ---------- */
+.game-pet .status-card {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  margin-bottom: 12px;
+}
+.game-pet .status-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.game-pet .stage-badge {
+  background: linear-gradient(135deg, var(--mint) , #5cc993);
+  color: #fff; font-weight: 800; font-size: 14px;
+  padding: 4px 14px; border-radius: 999px;
+}
+.game-pet .hearts { font-weight: 800; font-size: 16px; }
+.game-pet .stars { font-weight: 800; font-size: 16px; }
+.game-pet .bar { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+.game-pet .bar-icon { font-size: 16px; width: 22px; text-align: center; }
+.game-pet .bar-track { flex: 1; height: 12px; background: #f3eef2; border-radius: 999px; overflow: hidden; }
+.game-pet .bar-fill { height: 100%; border-radius: 999px; transition: width 0.6s ease; }
+.game-pet .grow-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.game-pet .grow-label { font-size: 13px; font-weight: 700; white-space: nowrap; }
+.game-pet .bar-track.grow { height: 10px; }
+.game-pet .grow-next { font-size: 12px; color: var(--ink-soft); white-space: nowrap; }
+
+/* ---------- 宠物舞台 ---------- */
+.game-pet .stage {
+  background: radial-gradient(circle at 50% 30%, #fff 0%, var(--pink-bg) 70%);
+  border-radius: 28px;
+  padding: 10px 10px 16px;
+  text-align: center;
+  box-shadow: inset 0 2px 10px rgba(255,143,179,0.12);
+  position: relative;
+  overflow: hidden;
+}
+.game-pet .pet-wrap { position: relative; display: inline-block; }
+.game-pet .pet { width: 220px; height: auto; animation: pet-bob 2.6s ease-in-out infinite; }
+@keyframes pet-bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+
+/* 动作动画 */
+.game-pet .anim-happy .pet { animation: pet-wiggle 0.5s ease 2; }
+@keyframes pet-wiggle { 0%,100% { transform: rotate(0); } 25% { transform: rotate(-9deg) translateY(-4px); } 75% { transform: rotate(9deg) translateY(-4px); } }
+.game-pet .anim-eat .pet { animation: pet-munch 0.4s ease 3; }
+@keyframes pet-munch { 0%,100% { transform: scale(1); } 50% { transform: scale(1.07, 0.93); } }
+.game-pet .anim-jump .pet { animation: pet-jump 0.55s ease 2; }
+@keyframes pet-jump { 0%,100% { transform: translateY(0); } 45% { transform: translateY(-46px) scale(1.03); } }
+.game-pet .anim-bath .pet { animation: pet-sway 0.8s ease 2; }
+@keyframes pet-sway { 0%,100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
+.game-pet .anim-sing .pet { animation: pet-singbounce 0.5s ease 3; }
+@keyframes pet-singbounce { 0%,100% { transform: translateY(0); } 30% { transform: translateY(-14px); } 60% { transform: translateY(0); } }
+.game-pet .anim-dance .pet { animation: pet-spin360 0.9s ease 1; }
+@keyframes pet-spin360 { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+.game-pet .anim-story .pet { animation: pet-rock 0.9s ease 2; }
+@keyframes pet-rock { 0%,100% { transform: rotate(-4deg) translateY(0); } 50% { transform: rotate(4deg) translateY(-3px); } }
+
+.game-pet .sleep-z { position: absolute; top: 6px; right: 12px; font-size: 30px; animation: pet-zfloat 2s ease-in-out infinite; }
+@keyframes pet-zfloat { 0%,100% { transform: translateY(0); opacity: 0.9; } 50% { transform: translateY(-10px); opacity: 0.5; } }
+
+.game-pet .ball {
+  position: absolute; left: 50%; top: 30%; font-size: 34px;
+  animation: pet-ballthrow 1.2s ease forwards;
+}
+@keyframes pet-ballthrow {
+  0% { transform: translate(-90px, -70px) scale(0.6); opacity: 0; }
+  25% { opacity: 1; }
+  60% { transform: translate(-10px, 30px) scale(1.1); }
+  100% { transform: translate(60px, -40px) scale(0.7); opacity: 0; }
+}
+.game-pet .bubble { position: absolute; bottom: 20%; font-size: 24px; animation: pet-rise 1.3s ease-out forwards; }
+@keyframes pet-rise { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-110px); opacity: 0; } }
+.game-pet .float-up {
+  position: absolute; left: 50%; top: 22%;
+  transform: translateX(-50%);
+  font-weight: 800; font-size: 18px; color: var(--pink-deep);
+  animation: pet-floatUp 1.25s ease-out forwards;
+  pointer-events: none; white-space: nowrap;
+  text-shadow: 0 1px 0 #fff;
+}
+@keyframes pet-floatUp { from { opacity: 0; transform: translate(-50%, 10px); } 20% { opacity: 1; } to { opacity: 0; transform: translate(-50%, -46px); } }
+
+.game-pet .sparkle { animation: pet-twinkle 1.4s ease-in-out infinite; transform-origin: center; transform-box: fill-box; }
+.game-pet .sparkle.s2 { animation-delay: 0.4s; } .game-pet .sparkle.s3 { animation-delay: 0.8s; }
+@keyframes pet-twinkle { 0%,100% { opacity: 0.35; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.15); } }
+
+.game-pet .pet-name { font-size: 19px; font-weight: 800; margin-top: 2px; }
+.game-pet .pet-type { font-size: 13px; color: var(--ink-soft); font-weight: 400; }
+.game-pet .pet-click-hint {
+  margin-top: 8px; background: #fff; border: 2px dashed var(--pink-soft);
+  border-radius: 999px; padding: 7px 18px; font-size: 14px; font-family: inherit;
+  color: var(--ink); cursor: pointer;
+}
+.game-pet .pet-click-hint:active { transform: scale(0.96); }
+
+/* ---------- 本轮游玩时间条 ---------- */
+.game-pet .timebar {
+  background: #fff; border-radius: 999px;
+  padding: 8px 14px; margin: 12px 0;
+  font-size: 13px; font-weight: 700;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+  display: flex; align-items: center; gap: 10px;
+}
+.game-pet .timebar-track {
+  flex: 1; height: 10px; border-radius: 999px;
+  background: var(--pink-soft); overflow: hidden;
+}
+.game-pet .timebar-fill {
+  height: 100%; border-radius: 999px;
+  background: linear-gradient(90deg, var(--mint), var(--pink));
+  transition: width 1s linear;
+}
+
+/* ---------- 休息遮罩 ---------- */
+.game-pet .rest-mask {
+  position: fixed; inset: 0; z-index: 90;
+  background: rgba(255, 240, 245, 0.88);
+  backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px; animation: pet-fadeIn 0.4s ease;
+}
+.game-pet .rest-card {
+  background: #fff; border-radius: 28px;
+  padding: 28px 26px; text-align: center;
+  box-shadow: var(--shadow); max-width: 340px; width: 100%;
+  border: 3px solid var(--pink-soft);
+}
+.game-pet .rest-card h2 { margin: 8px 0 4px; font-size: 22px; }
+.game-pet .rest-pet { position: relative; display: inline-block; }
+.game-pet .rest-pet .pet { width: 150px; }
+.game-pet .sleep-z.big { font-size: 40px; top: -6px; right: 6px; }
+.game-pet .rest-text { color: var(--ink-soft); font-size: 15px; line-height: 1.8; margin: 6px 0 12px; }
+.game-pet .rest-count {
+  font-size: 44px; font-weight: 800; color: var(--pink-deep);
+  font-variant-numeric: tabular-nums; letter-spacing: 2px;
+}
+.game-pet .rest-tip { font-size: 13px; color: var(--ink-soft); margin: 12px 0 0; }
+
+/* ---------- 动作按钮（两行：喂食+互动 / 学单词） ---------- */
+.game-pet .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.game-pet .action-btn {
+  flex: 1 1 21%; background: #fff; border: none; border-radius: 18px;
+  padding: 12px 4px 10px; cursor: pointer; font-family: inherit;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  font-size: 14px; font-weight: 700; color: var(--ink);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.07);
+  transition: transform 0.12s ease;
+}
+.game-pet .action-btn:active { transform: scale(0.93); }
+.game-pet .action-btn:disabled { opacity: 0.4; }
+.game-pet .action-btn.cant { opacity: 0.55; filter: grayscale(0.35); } /* ⭐ 不够：置灰但仍可点出提示 */
+.game-pet .action-btn .a-emoji { font-size: 30px; }
+.game-pet .action-btn .a-en { font-size: 11px; color: var(--pink-deep); font-weight: 800; }
+.game-pet .action-btn .a-cost { font-size: 11px; color: #e8a100; font-weight: 800; }
+.game-pet .action-btn .a-cost.earn { color: var(--mint); }
+.game-pet .action-btn.feed { background: linear-gradient(135deg, #ffe9b8, #ffcf7d); }
+.game-pet .action-btn.quiz-btn { background: linear-gradient(135deg, var(--mint-soft), #a8e6c5); }
+
+.game-pet .tip { text-align: center; font-size: 13px; color: var(--ink-soft); margin: 14px 6px 0; line-height: 1.6; }
+
+/* ---------- 弹窗 ---------- */
+.game-pet .modal-mask {
+  position: fixed; inset: 0; background: rgba(107, 91, 110, 0.45);
+  display: flex; align-items: center; justify-content: center;
+  padding: 18px; z-index: 50; animation: pet-fadeIn 0.2s ease;
+}
+.game-pet .modal {
+  background: var(--cream); border-radius: 26px; padding: 20px 16px;
+  width: 100%; max-width: 420px; max-height: 86vh; overflow-y: auto;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+  text-align: center;
+}
+.game-pet .modal h3 { margin: 0 0 14px; color: var(--pink-deep); font-size: 20px; }
+.game-pet .modal-sub { display: block; font-size: 12px; color: var(--ink-soft); font-weight: 400; margin-top: 4px; }
+.game-pet .modal .btn-ghost { margin-top: 14px; }
+
+/* 食物卡片 */
+.game-pet .food-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.game-pet .food-card {
+  position: relative; background: #fff; border: 3px solid #f3eef2; border-radius: 18px;
+  padding: 12px 6px 10px; cursor: pointer; font-family: inherit;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  transition: transform 0.12s ease, border-color 0.12s ease;
+}
+.game-pet .food-card:active { transform: scale(0.93); border-color: var(--pink); }
+.game-pet .food-card.favorite { border-color: var(--pink-deep); background: var(--pink-bg); }
+.game-pet .fav-tag {
+  position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+  background: var(--pink-deep); color: #fff; font-size: 10px; font-weight: 800;
+  padding: 2px 10px; border-radius: 999px; white-space: nowrap;
+}
+.game-pet .food-emoji { font-size: 40px; }
+.game-pet .food-en { font-weight: 800; font-size: 16px; }
+.game-pet .food-zh { font-size: 12px; color: var(--ink-soft); }
+.game-pet .speaker {
+  margin-top: 4px; font-size: 20px; background: var(--mint-soft);
+  width: 38px; height: 38px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+.game-pet .speaker:active { transform: scale(0.9); }
+
+/* 测验 */
+.game-pet .quiz-top { display: flex; justify-content: space-between; font-weight: 800; font-size: 18px; margin-bottom: 12px; color: var(--pink-deep); }
+.game-pet .quiz-count { color: var(--ink-soft); font-size: 14px; }
+.game-pet .quiz-pic { font-size: 84px; margin: 6px 0; animation: pet-bob 2s ease-in-out infinite; }
+.game-pet .quiz-hint { font-size: 16px; margin: 8px 0 14px; }
+.game-pet .listen-btn {
+  font-size: 22px; font-family: inherit; font-weight: 800;
+  background: linear-gradient(135deg, var(--mint-soft), #a8e6c5);
+  border: none; border-radius: 999px; padding: 14px 30px; cursor: pointer; color: var(--ink);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08); margin: 10px 0;
+}
+.game-pet .listen-btn:active { transform: scale(0.95); }
+.game-pet .quiz-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.game-pet .quiz-opt {
+  background: #fff; border: 3px solid #f3eef2; border-radius: 16px;
+  padding: 12px 8px; font-size: 17px; font-weight: 800; font-family: inherit;
+  color: var(--ink); cursor: pointer; transition: all 0.15s ease;
+}
+.game-pet .quiz-opt.right { border-color: var(--mint); background: #e9fbf1; }
+.game-pet .quiz-opt.wrong { border-color: #ff8f8f; background: #fff0f0; }
+.game-pet .quiz-opt.pic { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.game-pet .quiz-emoji { font-size: 40px; }
+.game-pet .quiz-zh { font-size: 13px; font-weight: 400; color: var(--ink-soft); }
+
+/* 升级弹窗 */
+.game-pet .levelup .levelup-emoji { font-size: 64px; animation: pet-jump 0.7s ease 2; }
+.game-pet .levelup p { font-size: 17px; }
+.game-pet .levelup .btn { margin-top: 8px; }
+
+/* 宠物小屋 */
+.game-pet .house-list { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 6px; }
+.game-pet .house-card {
+  position: relative; background: #fff; border: 3px solid #f3eef2; border-radius: 18px;
+  padding: 10px; width: 118px; cursor: pointer; font-family: inherit;
+}
+.game-pet .house-card.active { border-color: var(--mint); }
+.game-pet .house-card.locked { cursor: default; opacity: 0.85; }
+.game-pet .house-pet { width: 100%; height: auto; }
+.game-pet .house-lock { font-size: 44px; padding: 18px 0; }
+.game-pet .house-name { font-weight: 800; font-size: 14px; }
+.game-pet .house-stage { font-size: 11px; color: var(--ink-soft); margin: 4px 0 6px; line-height: 1.5; }
+.game-pet .house-tag {
+  position: absolute; top: -10px; right: -6px;
+  background: var(--mint); color: #fff; font-size: 10px; font-weight: 800;
+  padding: 2px 10px; border-radius: 999px;
+}
+
+/* 小提示条 */
+.game-pet .toast {
+  position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%);
+  background: rgba(107, 91, 110, 0.92); color: #fff;
+  padding: 12px 22px; border-radius: 999px; font-size: 15px; font-weight: 700;
+  z-index: 100; max-width: 88vw; text-align: center;
+  animation: pet-toastIn 0.25s ease;
+}
+@keyframes pet-toastIn { from { opacity: 0; transform: translate(-50%, 12px); } to { opacity: 1; transform: translate(-50%, 0); } }
+
+/* 桌面端稍微放宽 */
+@media (min-width: 520px) {
+  .game-pet .pet { width: 250px; }
+}
