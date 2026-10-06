@@ -5,7 +5,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import {
   newGame, getUnit, at, aliveOf, selectUnit, deselect,
-  moveSelected, attackSelected, standbySelected, endPlayerTurn, CLASSES,
+  moveSelected, attackSelected, standbySelected, enemyAct, checkEnd, CLASSES,
 } from './game.js';
 import { drawBoard, newFx, addFloater } from './render.js';
 import { sfx, isMuted, setMuted, unlockAudio } from './audio.js';
@@ -188,14 +188,30 @@ export default function TacticsGame() {
     if (standbySelected(s)) { sfx.ui(); refresh(); }
   }, [refresh]);
 
-  const onEndTurn = useCallback(() => {
+  const onEndTurn = useCallback(async () => {
     unlockAudio();
     const s = stateRef.current;
     if (s.phase !== 'player') return;
     sfx.turn();
-    // 敌方行动稍作延迟，分步播放更有战棋感
-    const events = endPlayerTurn(s);
-    playEvents(events);
+    // 敌方回合：逐个单位播放（移动→停顿→攻击），不然一瞬间算完看着像没动
+    deselect(s);
+    s.phase = 'enemy';
+    refresh();
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    await sleep(400);
+    for (const e of aliveOf(s, 'red')) {
+      if (s.phase === 'over') break;
+      const events = enemyAct(s, e);
+      checkEnd(s);
+      playEvents(events);
+      refresh();
+      await sleep(700);
+    }
+    if (s.phase !== 'over') {
+      s.phase = 'player';
+      s.round += 1;
+      for (const u of s.units) u.acted = false;
+    }
     if (s.result === 'win') { sfx.win(); saveSave({ unlocked: 1 }); }
     if (s.result === 'lose') sfx.lose();
     refresh();
