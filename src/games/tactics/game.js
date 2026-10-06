@@ -191,9 +191,15 @@ export function selectUnit(s, id) {
   const u = getUnit(s, id);
   if (!u || !u.alive || u.side !== 'blue' || u.acted || s.phase !== 'player') return false;
   s.selectedId = id;
-  // 已移动过的单位不再给移动范围（只能攻击/待机），防止无限走位
-  s.moveRange = u.moved ? [] : calcMoveRange(s, u);
-  s.attackRange = [];
+  if (u.moved) {
+    // 已移动过：不再给移动范围，攻击范围按当前位置算
+    s.moveRange = [];
+    s.attackRange = calcAttackRange(s, u);
+  } else {
+    // 未移动：同时显示移动范围和当前位置的攻击范围（可直接攻击相邻敌人）
+    s.moveRange = calcMoveRange(s, u);
+    s.attackRange = calcAttackRange(s, u);
+  }
   return true;
 }
 
