@@ -48,41 +48,41 @@ const T_WATER = [
 
 // 步兵 14x16（剑/枪/斧/弓共用身体，武器单独叠加绘制）
 const SOLDIER = [
-  '....HHHHHH....',
-  '...HHHHHHHH...',
-  '...HHHHHHHH...',
-  '...KKKKKKKK...',
-  '...KFFFFFFK...',
-  '...KFEFFEFK...',
-  '....KFFFFK....',
-  '....KFFFFK....',
-  '..KKSSSSSSKK..',
-  '.KSSKSSSSKSSK.',
-  '.K.KSSSSSSK.K.',
-  '...KSSSSSSK...',
-  '...KSS..SSK...',
-  '...KKK..KKK...',
-  '..............',
-  '..............',
+  '.....KKKKKK.....',
+  '...KKHHHHHHKK...',
+  '..KHHHHHHHHHHK..',
+  '..KHHHHHHHHHHK..',
+  '..KKKKKKKKKKKK..',
+  '...KFFFFFFFFK...',
+  '...KFEFFFFEFK...',
+  '...KFFFFFFFFK...',
+  '....KFFFFFFK....',
+  '..KKSSSSSSSSKK..',
+  '.KSSKSSSSSSKSSK.',
+  '.KSKSSSSSSSSKSK.',
+  '..KSSSSSSSSSSK..',
+  '...KKYYYYYYKK...',
+  '...KSSK..KSSK...',
+  '...KKK....KKK...'
 ];
 // 骑士：马 16x16（骑手用 SOLDIER 的上半身画在马上）
 const HORSE = [
-  '................',
-  '.....HHHHH......',
-  '....HHHHHHH.....',
-  '....HHHHHHH.....',
-  '....KKKKKKK.....',
-  '....KFFFFFK.....',
-  '.....KFFFK......',
-  '...KKSSSSSSKK...',
-  '..KSSKSSSSKSSK..',
-  '..K.KSSSSSSK.K..',
-  'KKKKSSSSSSSSKKKK',
-  'KSSSKSSSSSSSSSSK',
-  '.KSK..SSSS..KSK.',
-  '.KK...SSSS...KK.',
-  '......SSSS......',
-  '.....KK..KK.....',
+  '........KKKKK...',
+  '.......KHHHHHK..',
+  '.......KHHHHHK..',
+  '.......KKKKKKK..',
+  '.......KFFFFFK..',
+  '.......KFEFEFK..',
+  '........KFFFK...',
+  'KK....KKSSSKK...',
+  'KWWK.KSSSSSSK...',
+  'KWWWKSSSSSSSSK..',
+  '.KWWWWWWWWWWWWK.',
+  '.KWWWWWWWWWWWWK.',
+  '..KWWWWWWWWWWK..',
+  '..KWKKKKKKKKWK..',
+  '...KKK....KKK...',
+  '................'
 ];
 
 // 武器 8x8（画在单位右侧）
@@ -223,10 +223,16 @@ export function drawBoard(g, cell, s, fx) {
     const dark = u.side === 'blue' ? PAL.b : PAL.r;
     const isKnight = u.cls === 'knight';
     const body = sprite(isKnight ? HORSE : SOLDIER, helm, dark);
-    const bw = isKnight ? 16 : 14, bh = 16;
+    const bw = 16, bh = 16;
     const dw = cell * (bw / 16), dh = cell;
     const dx = u.x * cell + (cell - dw) / 2;
     const dy = u.y * cell + (cell - dh) / 2 + (isKnight ? 0 : cell * 0.06);
+    // 脚下阴影，衬出人物
+    g.fillStyle = 'rgba(0,0,0,0.28)';
+    const shW = cell * 0.62, shH = Math.max(3, cell * 0.1);
+    g.beginPath();
+    g.ellipse(u.x * cell + cell / 2, u.y * cell + cell - shH * 0.7, shW / 2, shH / 2, 0, 0, Math.PI * 2);
+    g.fill();
     const img = u.acted && u.side === 'blue' ? grayOf(body) : body;
     // 已移动但还没行动：半透明（还能攻击/待机，但不能再走）
     const dimmed = !u.acted && u.moved && u.side === 'blue';
