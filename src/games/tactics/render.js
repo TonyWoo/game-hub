@@ -228,13 +228,19 @@ export function drawBoard(g, cell, s, fx) {
     const dx = u.x * cell + (cell - dw) / 2;
     const dy = u.y * cell + (cell - dh) / 2 + (isKnight ? 0 : cell * 0.06);
     const img = u.acted && u.side === 'blue' ? grayOf(body) : body;
+    // 已移动但还没行动：半透明（还能攻击/待机，但不能再走）
+    const dimmed = !u.acted && u.moved && u.side === 'blue';
+    if (dimmed) g.globalAlpha = 0.55;
     g.drawImage(img, dx, dy, dw, dh);
     // 武器（非骑士）
     if (!isKnight) {
-      const wimg = sprite(WEAPONS[u.cls], helm, dark);
+      const wbody = sprite(WEAPONS[u.cls], helm, dark);
+      // 已行动的单位武器一起变灰
+      const wimg = u.acted && u.side === 'blue' ? grayOf(wbody) : wbody;
       const ww = cell * 0.5;
       g.drawImage(wimg, u.x * cell + cell * 0.55, u.y * cell + cell * 0.3, ww, ww);
     }
+    if (dimmed) g.globalAlpha = 1;
     // 选中描边
     if (s.selectedId === u.id) {
       g.strokeStyle = '#fde047';

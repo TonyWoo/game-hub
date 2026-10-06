@@ -38,6 +38,12 @@ function UnitPanel({ unit, onStandby, onEndTurn, hint }) {
             <div className="t-unit-name">
               {unit.name}
               <span className="t-hp-text">{unit.hp}/{unit.maxHp}</span>
+              {unit.side === 'blue' && unit.acted && (
+                <span className="t-state-done">已行动</span>
+              )}
+              {unit.side === 'blue' && !unit.acted && unit.moved && (
+                <span className="t-state-moved">走过·可攻击</span>
+              )}
             </div>
             <div className="t-hpbar"><div
               className="t-hpfill"

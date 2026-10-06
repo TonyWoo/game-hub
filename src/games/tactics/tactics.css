@@ -266,3 +266,21 @@
   border-color: #e8892b;
   color: #fff;
 }
+
+/* 单位状态标签 */
+.game-tactics .t-state-done,
+.game-tactics .t-state-moved {
+  font-size: 12px;
+  font-weight: bold;
+  border-radius: 6px;
+  padding: 1px 7px;
+  margin-left: 8px;
+}
+.game-tactics .t-state-done {
+  background: #4b4f68;
+  color: #c9cddd;
+}
+.game-tactics .t-state-moved {
+  background: #3b5a80;
+  color: #cfe6ff;
+}
