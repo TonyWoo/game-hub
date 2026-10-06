@@ -15,15 +15,47 @@ import './tactics.css';
 
 const CLASS_ICON = { sword: '🗡️', lance: '🔱', axe: '🪓', archer: '🏹', knight: '🐎' };
 
-function Hud({ level, levelName, round, blue, red, muted, onMute }) {
+function Hud({ level, levelName, round, blue, red, muted, onMute, onHelp }) {
   return (
     <div className="t-hud">
       <span className="t-hud-item">🚩 第 {level} 关 · {levelName}</span>
       <span className="t-hud-item">回合 {round}</span>
       <span className="t-hud-item">🔵 {blue} / 🔴 {red}</span>
+      <button className="t-icon-btn" onClick={onHelp} title="玩法说明">
+        ❓
+      </button>
       <button className="t-icon-btn" onClick={onMute} title="音效开关">
         {muted ? '🔇' : '🔊'}
       </button>
+    </div>
+  );
+}
+
+/** 玩法说明弹窗 */
+function HelpDialog({ onClose }) {
+  return (
+    <div className="t-overlay" onClick={onClose}>
+      <div className="t-dialog t-help" onClick={(e) => e.stopPropagation()}>
+        <h2>❓ 玩法说明</h2>
+        <div className="t-help-body">
+          <p><b>🎯 目标</b><br />全灭红色敌军即可过关，通关解锁下一关。</p>
+          <p><b>👆 操作</b><br />
+            点蓝色单位选中 → 点青蓝格移动 → 点红色格攻击敌人；<br />
+            或点"待机"跳过该单位，点"结束回合"轮到敌方行动。</p>
+          <p><b>⏱️ 行动规则</b><br />
+            每个单位每回合只能走一次，走后可攻击或待机；<br />
+            走过的单位变半透明，行动完变灰色。</p>
+          <p><b>⚔️ 兵种克制</b><br />
+            剑克斧、斧克枪、枪克剑，克制时攻击 +2；<br />
+            弓手射程 2 格，被敌人贴身后无法反击。</p>
+          <p><b>🌲 地形</b><br />
+            森林：走 2 步，被打时闪避 +20；<br />
+            山丘：走 2 步，防御 +1；水面走不进去。</p>
+        </div>
+        <div className="t-dialog-btns">
+          <button className="t-btn primary" onClick={onClose}>知道了</button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -74,6 +106,7 @@ export default function TacticsGame() {
   const [state, setState] = useState(() => newGame(1));
   const [unlocked, setUnlocked] = useState(() => loadSave().unlocked);
   const [muted, setM] = useState(() => isMuted());
+  const [showHelp, setShowHelp] = useState(false);
   const [tick, setTick] = useState(0); // 强制重绘
   const stateRef = useRef(state);
   stateRef.current = state;
@@ -299,6 +332,10 @@ export default function TacticsGame() {
           })}
         </div>
         <p className="t-menu-tip">通关解锁下一关 · 点右上角 🏠 回大厅</p>
+        <button className="t-help-btn" onClick={() => setShowHelp(true)}>
+          ❓ 玩法说明
+        </button>
+        {showHelp && <HelpDialog onClose={() => setShowHelp(false)} />}
       </div>
     );
   }
@@ -313,6 +350,7 @@ export default function TacticsGame() {
         red={aliveOf(s, 'red').length}
         muted={muted}
         onMute={onMute}
+        onHelp={() => setShowHelp(true)}
       />
       <div className="t-board-wrap" ref={wrapRef}>
         <canvas
@@ -327,8 +365,8 @@ export default function TacticsGame() {
         onStandby={onStandby}
         onEndTurn={onEndTurn}
       />
-      {s.phase === 'over' && (
-        <div className="t-overlay">
+      {showHelp && <HelpDialog onClose={() => setShowHelp(false)} />}
+      {s.phase === 'over' && (        <div className="t-overlay">
           <div className="t-dialog">
             <h2>{s.result === 'win'
               ? (s.level >= MAX_LEVEL ? '🎉 全部通关！' : '🏆 胜利！')

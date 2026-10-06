@@ -284,3 +284,35 @@
   background: #3b5a80;
   color: #cfe6ff;
 }
+
+/* 玩法说明 */
+.game-tactics .t-help-btn {
+  margin-top: 14px;
+  background: #16213a;
+  border: 2px solid #2b3c63;
+  border-radius: 12px;
+  color: #c9d2e8;
+  font-size: 15px;
+  padding: 10px 22px;
+  cursor: pointer;
+}
+.game-tactics .t-dialog.t-help {
+  max-width: 88vw;
+  max-height: 82vh;
+  display: flex;
+  flex-direction: column;
+}
+.game-tactics .t-help-body {
+  text-align: left;
+  font-size: 14px;
+  line-height: 1.55;
+  overflow-y: auto;
+  margin: 4px 0 12px;
+  color: #dbe2f4;
+}
+.game-tactics .t-help-body p {
+  margin: 0 0 10px;
+}
+.game-tactics .t-help-body b {
+  color: #ffd166;
+}
