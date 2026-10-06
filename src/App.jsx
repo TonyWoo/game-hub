@@ -11,6 +11,7 @@ import DressUp from './games/dressup/index.jsx';
 import ChefGame from './games/chef/index.jsx';
 import MathGame from './games/math/index.jsx';
 import ChineseGame from './games/chinese/index.jsx';
+import TacticsGame from './games/tactics/index.jsx';
 import BackHomeButton from './BackHomeButton.jsx';
 
 const GAMES = [
@@ -61,6 +62,12 @@ const GAMES = [
     icon: '📖',
     name: '语文乐园 · 二年级',
     desc: '10 关 3D 语文闯关，听读汉字',
+  },
+  {
+    id: 'tactics',
+    icon: '🛡️',
+    name: '小小战棋',
+    desc: '回合制战棋：走位克制，全灭敌军',
   },
 ];
 
@@ -132,6 +139,11 @@ export default function App() {
       {route === 'chinese' && (
         <div className="game-chinese">
           <ChineseGame />
+        </div>
+      )}
+      {route === 'tactics' && (
+        <div className="game-tactics">
+          <TacticsGame />
         </div>
       )}
     </div>
