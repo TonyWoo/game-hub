@@ -133,6 +133,15 @@ export default function TacticsGame() {
     return () => window.removeEventListener('resize', onR);
   }, [fitCanvas, refresh]);
 
+  // 从选关菜单进入游戏时棋盘刚挂载，补一次尺寸适配
+  // （首屏挂载时还是菜单，没有 canvas，fitCanvas 直接返回了）
+  useEffect(() => {
+    if (screen === 'game') {
+      fitCanvas();
+      refresh();
+    }
+  }, [screen, fitCanvas, refresh]);
+
   // 事件 → 飘字 + 音效
   const playEvents = useCallback((events) => {
     const s = stateRef.current;
