@@ -261,9 +261,13 @@ export function resolveAttack(s, attacker, defender, rand = Math.random) {
 /** 选中我方未行动单位 */
 export function selectUnit(s, id) {
   const u = getUnit(s, id);
-  if (!u || !u.alive || u.side !== 'blue' || u.acted || s.phase !== 'player') return false;
+  if (!u || !u.alive || u.side !== 'blue' || s.phase !== 'player') return false;
   s.selectedId = id;
-  if (u.moved) {
+  if (u.acted) {
+    // 已行动：只查看信息，不给任何范围
+    s.moveRange = [];
+    s.attackRange = [];
+  } else if (u.moved) {
     // 已移动过：不再给移动范围，攻击范围按当前位置算
     s.moveRange = [];
     s.attackRange = calcAttackRange(s, u);

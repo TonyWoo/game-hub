@@ -237,8 +237,8 @@ export default function TacticsGame() {
         refresh();
         return;
       }
-      // 点到另一个我方未行动单位 → 切换选中
-      if (u && u.side === 'blue' && !u.acted) {
+      // 点到另一个我方单位 → 切换选中（已行动的只能看信息）
+      if (u && u.side === 'blue') {
         if (selectUnit(s, u.id)) sfx.select();
         refresh();
         return;
@@ -248,8 +248,8 @@ export default function TacticsGame() {
       refresh();
       return;
     }
-    // 未选中时：点我方未行动单位选中
-    if (u && u.side === 'blue' && !u.acted) {
+    // 未选中时：点我方单位选中（已行动的只能看信息）
+    if (u && u.side === 'blue') {
       if (selectUnit(s, u.id)) sfx.select();
       refresh();
     }
@@ -305,7 +305,7 @@ export default function TacticsGame() {
   const hint = s.phase === 'enemy'
     ? '敌方回合…'
     : selUnit
-      ? (s.moveRange.length ? '点蓝色格移动' : '点红色格攻击敌人，或待机')
+      ? (selUnit.acted ? '该单位本回合已行动' : s.moveRange.length ? '点蓝色格移动' : '点红色格攻击敌人，或待机')
       : '点我方蓝色单位开始行动';
 
   const LEVEL_TITLES = ['初入战场', '森林遭遇战', '决战山谷'];
