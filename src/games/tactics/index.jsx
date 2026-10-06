@@ -210,7 +210,7 @@ export default function TacticsGame() {
     if (s.phase !== 'over') {
       s.phase = 'player';
       s.round += 1;
-      for (const u of s.units) u.acted = false;
+      for (const u of s.units) { u.acted = false; u.moved = false; }
     }
     if (s.result === 'win') { sfx.win(); saveSave({ unlocked: 1 }); }
     if (s.result === 'lose') sfx.lose();

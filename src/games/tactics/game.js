@@ -39,6 +39,7 @@ export function makeUnit(side, cls, x, y) {
     hp: c.hp, maxHp: c.hp,
     x, y,
     acted: false,   // 本回合是否已行动
+    moved: false,   // 本回合是否已移动（移动后不可再走，只能攻击/待机）
     alive: true,
   };
 }
@@ -190,7 +191,8 @@ export function selectUnit(s, id) {
   const u = getUnit(s, id);
   if (!u || !u.alive || u.side !== 'blue' || u.acted || s.phase !== 'player') return false;
   s.selectedId = id;
-  s.moveRange = calcMoveRange(s, u);
+  // 已移动过的单位不再给移动范围（只能攻击/待机），防止无限走位
+  s.moveRange = u.moved ? [] : calcMoveRange(s, u);
   s.attackRange = [];
   return true;
 }
@@ -208,6 +210,7 @@ export function moveSelected(s, x, y) {
   if (!u) return false;
   if (!s.moveRange.some((t) => t.x === x && t.y === y)) return false;
   u.x = x; u.y = y;
+  u.moved = true; // 走过就不能再走
   s.moveRange = [];
   // 移动后计算可攻击格（只高亮有敌人的格由 UI 判断）
   s.attackRange = calcAttackRange(s, u);
@@ -258,7 +261,7 @@ export function endPlayerTurn(s, rand = Math.random) {
   if (s.phase !== 'over') {
     s.phase = 'player';
     s.round += 1;
-    for (const u of s.units) u.acted = false;
+    for (const u of s.units) { u.acted = false; u.moved = false; }
   }
   return allEvents;
 }
