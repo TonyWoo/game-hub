@@ -5,19 +5,20 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import {
   newGame, getUnit, at, aliveOf, selectUnit, deselect,
-  moveSelected, attackSelected, standbySelected, enemyAct, checkEnd, CLASSES,
+  moveSelected, attackSelected, standbySelected, enemyAct, checkEnd,
+  MAX_LEVEL, CLASSES,
 } from './game.js';
 import { drawBoard, newFx, addFloater } from './render.js';
 import { sfx, isMuted, setMuted, unlockAudio } from './audio.js';
-import { saveSave } from './storage.js';
+import { loadSave, saveSave } from './storage.js';
 import './tactics.css';
 
 const CLASS_ICON = { sword: '🗡️', lance: '🔱', axe: '🪓', archer: '🏹', knight: '🐎' };
 
-function Hud({ round, blue, red, muted, onMute }) {
+function Hud({ level, levelName, round, blue, red, muted, onMute }) {
   return (
     <div className="t-hud">
-      <span className="t-hud-item">🚩 第 1 关</span>
+      <span className="t-hud-item">🚩 第 {level} 关 · {levelName}</span>
       <span className="t-hud-item">回合 {round}</span>
       <span className="t-hud-item">🔵 {blue} / 🔴 {red}</span>
       <button className="t-icon-btn" onClick={onMute} title="音效开关">
@@ -43,7 +44,7 @@ function UnitPanel({ unit, onStandby, onEndTurn, hint }) {
               style={{ width: `${(unit.hp / unit.maxHp) * 100}%` }}
             /></div>
             <div className="t-stats">
-              攻击 {CLASSES[unit.cls].atk}　防御 {CLASSES[unit.cls].def}
+              攻击 {unit.atk}　防御 {unit.def}
               　移动 {CLASSES[unit.cls].mov}　射程 {CLASSES[unit.cls].rng}
             </div>
           </div>
@@ -63,13 +64,37 @@ export default function TacticsGame() {
   const canvasRef = useRef(null);
   const wrapRef = useRef(null);
   const fxRef = useRef(newFx());
-  const [state, setState] = useState(() => newGame());
+  const [screen, setScreen] = useState('menu'); // menu | game
+  const [state, setState] = useState(() => newGame(1));
+  const [unlocked, setUnlocked] = useState(() => loadSave().unlocked);
   const [muted, setM] = useState(() => isMuted());
   const [tick, setTick] = useState(0); // 强制重绘
   const stateRef = useRef(state);
   stateRef.current = state;
 
   const refresh = useCallback(() => setTick((t) => t + 1), []);
+
+  // 开始第 n 关
+  const startLevel = useCallback((lv) => {
+    unlockAudio();
+    fxRef.current = newFx();
+    const ns = newGame(lv);
+    stateRef.current = ns;
+    setState(ns);
+    setScreen('game');
+    refresh();
+  }, [refresh]);
+
+  // 胜利：解锁下一关
+  const onWin = useCallback((level) => {
+    sfx.win();
+    const nl = Math.min(level + 1, MAX_LEVEL);
+    setUnlocked((u) => {
+      const nu = Math.max(u, nl);
+      saveSave({ unlocked: nu });
+      return nu;
+    });
+  }, []);
 
   // Canvas 尺寸：宽度自适应容器
   const fitCanvas = useCallback(() => {
@@ -152,7 +177,7 @@ export default function TacticsGame() {
         if (events) {
           if (sel.cls === 'archer') sfx.bow();
           playEvents(events);
-          if (s.result === 'win') { sfx.win(); saveSave({ unlocked: 1 }); }
+          if (s.result === 'win') onWin(s.level);
           if (s.result === 'lose') sfx.lose();
         }
         refresh();
@@ -180,7 +205,7 @@ export default function TacticsGame() {
       if (selectUnit(s, u.id)) sfx.select();
       refresh();
     }
-  }, [playEvents, refresh]);
+  }, [playEvents, refresh, onWin]);
 
   const onStandby = useCallback(() => {
     unlockAudio();
@@ -212,10 +237,10 @@ export default function TacticsGame() {
       s.round += 1;
       for (const u of s.units) { u.acted = false; u.moved = false; }
     }
-    if (s.result === 'win') { sfx.win(); saveSave({ unlocked: 1 }); }
+    if (s.result === 'win') onWin(s.level);
     if (s.result === 'lose') sfx.lose();
     refresh();
-  }, [playEvents, refresh]);
+  }, [playEvents, refresh, onWin]);
 
   const onMute = useCallback(() => {
     const m = !isMuted();
@@ -224,10 +249,8 @@ export default function TacticsGame() {
   }, []);
 
   const restart = useCallback(() => {
-    fxRef.current = newFx();
-    setState(newGame());
-    refresh();
-  }, [refresh]);
+    startLevel(stateRef.current.level);
+  }, [startLevel]);
 
   const s = state;
   const selUnit = s.selectedId ? getUnit(s, s.selectedId) : null;
@@ -237,9 +260,39 @@ export default function TacticsGame() {
       ? (s.moveRange.length ? '点蓝色格移动' : '点红色格攻击敌人，或待机')
       : '点我方蓝色单位开始行动';
 
+  const LEVEL_TITLES = ['初入战场', '森林遭遇战', '决战山谷'];
+
+  if (screen === 'menu') {
+    return (
+      <div className="t-menu">
+        <h1 className="t-menu-title">🛡️ 小小战棋</h1>
+        <p className="t-menu-sub">回合制战棋：走位克制，全灭敌军</p>
+        <div className="t-level-list">
+          {[1, 2, 3].map((n) => {
+            const locked = n > unlocked;
+            return (
+              <button
+                key={n}
+                className={`t-level-btn${locked ? ' locked' : ''}`}
+                disabled={locked}
+                onClick={() => startLevel(n)}
+              >
+                <span className="t-level-num">{locked ? '🔒' : `第 ${n} 关`}</span>
+                <span className="t-level-name">{LEVEL_TITLES[n - 1]}</span>
+              </button>
+            );
+          })}
+        </div>
+        <p className="t-menu-tip">通关解锁下一关 · 点右上角 🏠 回大厅</p>
+      </div>
+    );
+  }
+
   return (
     <>
       <Hud
+        level={s.level}
+        levelName={s.levelName}
         round={s.round}
         blue={aliveOf(s, 'blue').length}
         red={aliveOf(s, 'red').length}
@@ -262,13 +315,23 @@ export default function TacticsGame() {
       {s.phase === 'over' && (
         <div className="t-overlay">
           <div className="t-dialog">
-            <h2>{s.result === 'win' ? '🏆 胜利！' : '💀 失败…'}</h2>
+            <h2>{s.result === 'win'
+              ? (s.level >= MAX_LEVEL ? '🎉 全部通关！' : '🏆 胜利！')
+              : '💀 失败…'}</h2>
             <p>{s.result === 'win'
-              ? `全灭敌军！用了 ${s.round} 回合`
+              ? `第 ${s.level} 关 · 全灭敌军！用了 ${s.round} 回合`
               : '我方全灭，再接再厉！'}</p>
             <div className="t-dialog-btns">
+              {s.result === 'win' && s.level < MAX_LEVEL && (
+                <button className="t-btn primary" onClick={() => startLevel(s.level + 1)}>
+                  下一关 →
+                </button>
+              )}
               <button className="t-btn" onClick={restart}>
                 {s.result === 'win' ? '再来一局' : '重新挑战'}
+              </button>
+              <button className="t-btn" onClick={() => setScreen('menu')}>
+                选关
               </button>
             </div>
             <p className="t-dialog-tip">点右上角 🏠 回大厅</p>

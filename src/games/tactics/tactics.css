@@ -191,3 +191,78 @@
   color: #5d6b8c;
   margin-top: 12px;
 }
+
+/* 选关菜单 */
+.game-tactics .t-menu {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: #0b0f1a;
+  color: #e8ecf8;
+  text-align: center;
+}
+
+.game-tactics .t-menu-title {
+  font-size: 34px;
+  margin-bottom: 6px;
+}
+
+.game-tactics .t-menu-sub {
+  color: #8b96b8;
+  font-size: 14px;
+  margin-bottom: 26px;
+}
+
+.game-tactics .t-level-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(320px, 86vw);
+}
+
+.game-tactics .t-level-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: #16213a;
+  border: 2px solid #2b3c63;
+  border-radius: 12px;
+  color: #e8ecf8;
+  font-size: 17px;
+  cursor: pointer;
+}
+
+.game-tactics .t-level-btn:not(.locked):active {
+  background: #1e2c4e;
+}
+
+.game-tactics .t-level-btn.locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.game-tactics .t-level-num {
+  font-weight: bold;
+  color: #ffd166;
+  min-width: 64px;
+}
+
+.game-tactics .t-level-name {
+  color: #c9d2e8;
+}
+
+.game-tactics .t-menu-tip {
+  margin-top: 26px;
+  color: #5d6b8c;
+  font-size: 13px;
+}
+
+.game-tactics .t-btn.primary {
+  background: #e8892b;
+  border-color: #e8892b;
+  color: #fff;
+}

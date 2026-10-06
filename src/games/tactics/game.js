@@ -31,12 +31,15 @@ const manhattan = (a, b) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
 let uid = 0;
 
 /** 新建单位 */
-export function makeUnit(side, cls, x, y) {
+export function makeUnit(side, cls, x, y, bonus = {}) {
   const c = CLASSES[cls];
+  const maxHp = c.hp + (bonus.hp || 0);
   return {
     id: ++uid, side, cls,
     name: c.name,
-    hp: c.hp, maxHp: c.hp,
+    hp: maxHp, maxHp,
+    atk: c.atk + (bonus.atk || 0),
+    def: c.def + (bonus.def || 0),
     x, y,
     acted: false,   // 本回合是否已行动
     moved: false,   // 本回合是否已移动（移动后不可再走，只能攻击/待机）
@@ -44,7 +47,7 @@ export function makeUnit(side, cls, x, y) {
   };
 }
 
-/** 第 1 关：地形 + 双方布阵 */
+/** 第 1 关：初入战场 —— 基础地形与 4v4 */
 export function level1() {
   // 地形：中间 2×3 森林带，两个山丘散布，右下一小片 2×2 水域
   const terrain = Array.from({ length: H }, () => Array(W).fill(TERRAIN.GRASS));
@@ -66,14 +69,83 @@ export function level1() {
     makeUnit('red', 'lance', 6, 3),
     makeUnit('red', 'archer', 6, 4),
   ];
-  return { terrain, units };
+  return { terrain, units, name: '初入战场' };
+}
+
+/** 第 2 关：森林遭遇战 —— 敌方 5 单位，中央大片森林 */
+export function level2() {
+  const terrain = Array.from({ length: H }, () => Array(W).fill(TERRAIN.GRASS));
+  const set = (x, y, t) => { terrain[y][x] = t; };
+  // 中央 3×3 森林
+  for (const y of [2, 3, 4]) for (const x of [3, 4, 5]) set(x, y, TERRAIN.FOREST);
+  set(1, 1, TERRAIN.HILL);
+  set(6, 6, TERRAIN.HILL);
+  set(2, 6, TERRAIN.WATER);
+  set(5, 1, TERRAIN.WATER);
+
+  const buff = { hp: 4, atk: 1 }; // 敌方小幅强化
+  const units = [
+    // 我方（蓝）：多了骑士
+    makeUnit('blue', 'sword', 0, 1),
+    makeUnit('blue', 'sword', 0, 6),
+    makeUnit('blue', 'lance', 1, 3),
+    makeUnit('blue', 'archer', 1, 4),
+    makeUnit('blue', 'knight', 0, 3),
+    // 敌方（红）：5 单位，斧枪弓组合
+    makeUnit('red', 'axe', 7, 1, buff),
+    makeUnit('red', 'axe', 7, 6, buff),
+    makeUnit('red', 'lance', 6, 2, buff),
+    makeUnit('red', 'lance', 6, 5, buff),
+    makeUnit('red', 'archer', 6, 3, buff),
+  ];
+  return { terrain, units, name: '森林遭遇战' };
+}
+
+/** 第 3 关：决战山谷 —— 敌方 6 单位含骑士，大幅强化，山丘隘口 */
+export function level3() {
+  const terrain = Array.from({ length: H }, () => Array(W).fill(TERRAIN.GRASS));
+  const set = (x, y, t) => { terrain[y][x] = t; };
+  // 山丘隘口：y=3 一排山丘，中间留 3、4 两格谷口
+  for (const x of [1, 2, 5, 6]) set(x, 3, TERRAIN.HILL);
+  // 森林散布
+  set(3, 1, TERRAIN.FOREST); set(4, 1, TERRAIN.FOREST);
+  set(3, 6, TERRAIN.FOREST); set(4, 6, TERRAIN.FOREST);
+  // 右上水域
+  for (const y of [0, 1]) for (const x of [6, 7]) set(x, y, TERRAIN.WATER);
+
+  const buff = { hp: 8, atk: 2 }; // 敌方大幅强化
+  const units = [
+    // 我方（蓝）
+    makeUnit('blue', 'sword', 0, 2),
+    makeUnit('blue', 'sword', 0, 5),
+    makeUnit('blue', 'lance', 1, 4),
+    makeUnit('blue', 'archer', 0, 4),
+    makeUnit('blue', 'knight', 1, 2),
+    // 敌方（红）：6 单位，含骑士压阵
+    makeUnit('red', 'axe', 7, 2, buff),
+    makeUnit('red', 'axe', 7, 5, buff),
+    makeUnit('red', 'lance', 6, 3, buff),
+    makeUnit('red', 'lance', 6, 4, buff),
+    makeUnit('red', 'archer', 7, 3, buff),
+    makeUnit('red', 'knight', 6, 6, buff),
+  ];
+  return { terrain, units, name: '决战山谷' };
+}
+
+export const LEVELS = [level1, level2, level3];
+export const MAX_LEVEL = LEVELS.length;
+
+/** 取第 n 关（1 起） */
+export function getLevel(n) {
+  const f = LEVELS[Math.min(Math.max(n, 1), MAX_LEVEL) - 1];
+  return f();
 }
 
 /** 新对局状态 */
-export function newGame() {
-  const { terrain, units } = level1();
+export function newGame(level = 1) {
+  const { terrain, units, name } = getLevel(level);
   return {
-    terrain, units,
+    terrain, units, level, levelName: name,
     phase: 'player',   // player | enemy | over
     round: 1,
     selectedId: null,
@@ -148,8 +220,8 @@ export function resolveAttack(s, attacker, defender, rand = Math.random) {
   const hitChance = 95 - TERRAIN_EVADE[s.terrain[defender.y][defender.x]];
   if (rand() * 100 < hitChance) {
     const dmg = Math.max(1,
-      aCls.atk + advantageBonus(attacker.cls, defender.cls)
-      - dCls.def - TERRAIN_DEF[s.terrain[defender.y][defender.x]]
+      attacker.atk + advantageBonus(attacker.cls, defender.cls)
+      - defender.def - TERRAIN_DEF[s.terrain[defender.y][defender.x]]
       + Math.floor(rand() * 3) - 1);
     defender.hp -= dmg;
     events.push({ type: 'hit', from: attacker.id, to: defender.id, dmg });
@@ -170,8 +242,8 @@ export function resolveAttack(s, attacker, defender, rand = Math.random) {
     const hitC2 = 95 - TERRAIN_EVADE[s.terrain[attacker.y][attacker.x]];
     if (rand() * 100 < hitC2) {
       const dmg2 = Math.max(1,
-        dCls.atk + advantageBonus(defender.cls, attacker.cls)
-        - aCls.def - TERRAIN_DEF[s.terrain[attacker.y][attacker.x]]
+        defender.atk + advantageBonus(defender.cls, attacker.cls)
+        - attacker.def - TERRAIN_DEF[s.terrain[attacker.y][attacker.x]]
         + Math.floor(rand() * 3) - 1);
       attacker.hp -= dmg2;
       events.push({ type: 'counter-hit', from: defender.id, to: attacker.id, dmg: dmg2 });
