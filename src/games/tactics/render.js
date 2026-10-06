@@ -288,7 +288,7 @@ export function drawBoard(g, cell, s, fx) {
     const isKnight = u.cls === 'knight';
     const body = sprite(isKnight ? HORSE : SOLDIER, helm, dark);
     const bw = 32, bh = 32;
-    const dw = cell * (bw / 16), dh = cell;
+    const dw = cell * (bw / 32), dh = cell * (bh / 32);
     const dx = u.x * cell + (cell - dw) / 2;
     const dy = u.y * cell + (cell - dh) / 2 + (isKnight ? 0 : cell * 0.06);
     // 脚下阴影，衬出人物
